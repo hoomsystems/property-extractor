@@ -280,7 +280,7 @@ def main():
                             st.markdown("#### 📍 Ubicación en Mapa")
                             
                             # Configuración de Mapbox
-                            mapbox_token = "tu_token_de_mapbox"  # Necesitarás obtener un token de Mapbox
+                            mapbox_token = st.secrets["MAPBOX_TOKEN"]
                             mapbox_style = "mapbox://styles/mapbox/streets-v11"
 
                             if property.get('latitude') and property.get('longitude'):
