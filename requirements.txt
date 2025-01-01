@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+python-multipart
+streamlit
+pandas
+pydantic[email]
+python-dotenv
+folium
+streamlit-folium
+requests
+geocoder 
+mapbox
