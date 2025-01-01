@@ -3,6 +3,10 @@ import requests
 from datetime import datetime
 import folium
 import streamlit_folium
+import os
+
+# Obtener la URL del backend desde las variables de entorno
+BACKEND_URL = st.secrets.get("BACKEND_URL", "http://localhost:8000")
 
 def main():
     st.title("🏠 Property Collector")
@@ -59,7 +63,7 @@ def main():
         
         filters = getattr(st.session_state, 'filters', {})
         response = requests.get(
-            "http://localhost:8000/api/properties",
+            f"{BACKEND_URL}/api/properties",
             params={
                 "page": page,
                 "per_page": items_per_page,
@@ -268,7 +272,7 @@ def main():
                                 if st.button("🗑️ Eliminar", key=f"delete_{property['id']}"):
                                     try:
                                         response = requests.delete(
-                                            f"http://localhost:8000/api/properties/{property['id']}"
+                                            f"{BACKEND_URL}/api/properties/{property['id']}"
                                         )
                                         if response.ok:
                                             st.success("Propiedad eliminada")
@@ -356,7 +360,7 @@ def main():
                                     if st.button("💾 Guardar ubicación"):
                                         try:
                                             response = requests.put(
-                                                f"http://localhost:8000/api/properties/{property['id']}",
+                                                f"{BACKEND_URL}/api/properties/{property['id']}",
                                                 json={
                                                     **property,
                                                     "latitude": lat,
@@ -390,7 +394,7 @@ def main():
                                     if st.button("Establecer como principal", key=f"main_{property['id']}_{idx}"):
                                         try:
                                             response = requests.put(
-                                                f"http://localhost:8000/api/properties/{property['id']}",
+                                                f"{BACKEND_URL}/api/properties/{property['id']}",
                                                 json={
                                                     **property,
                                                     "main_image": img_url
@@ -454,7 +458,7 @@ def main():
                                             }
                                             
                                             response = requests.put(
-                                                f"http://localhost:8000/api/properties/{property['id']}",
+                                                f"{BACKEND_URL}/api/properties/{property['id']}",
                                                 json=updated_data
                                             )
                                             
@@ -493,7 +497,7 @@ def main():
 
 def delete_property(property_id: int) -> bool:
     try:
-        response = requests.delete(f"http://localhost:8000/api/properties/{property_id}")
+        response = requests.delete(f"{BACKEND_URL}/api/properties/{property_id}")
         return response.ok
     except:
         return False
