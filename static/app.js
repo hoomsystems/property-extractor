@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             params.append('page', currentPage);
             params.append('per_page', perPageSelect.value);
 
-            const url = `http://localhost:8000/api/properties?${params.toString()}`;
+            const url = `http://138.197.176.62:8000/api/properties?${params.toString()}`;
             const response = await fetch(url);
             const data = await response.json();
             
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         try {
-            const response = await fetch(`http://localhost:8000/api/properties/${propertyId}`, {
+            const response = await fetch(`http://hoomextractor.online/api/properties/${propertyId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const response = await fetch(`http://localhost:8000/api/properties/${propertyId}/images`, {
+            const response = await fetch(`http://hoomextractor.online/api/properties/${propertyId}/images`, {
                 method: 'POST',
                 body: formData
             });

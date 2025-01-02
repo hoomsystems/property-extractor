@@ -24,7 +24,7 @@ def main():
                 if st.form_submit_button("💾 Guardar"):
                     try:
                         response = requests.post(
-                            "http://localhost:8000/api/agents",
+                            "http://138.197.176.62:8000/api/agents",
                             json={
                                 "name": name,
                                 "internal_contact": internal_contact,
@@ -49,7 +49,7 @@ def main():
     
     # Lista de vendedores
     try:
-        response = requests.get("http://localhost:8000/api/agents")
+        response = requests.get("http://138.197.176.62:8000/api/agents")
         if response.ok:
             vendors = response.json()
             
@@ -90,7 +90,7 @@ def main():
                             if st.warning("¿Estás seguro de eliminar este vendedor?"):
                                 try:
                                     delete_response = requests.delete(
-                                        f"http://localhost:8000/api/agents/{vendor['id']}"
+                                        f"http://138.197.176.62:8000/api/agents/{vendor['id']}"
                                     )
                                     if delete_response.ok:
                                         st.success("Vendedor eliminado")
@@ -112,7 +112,7 @@ def main():
                                 if st.form_submit_button("💾 Guardar cambios"):
                                     try:
                                         response = requests.put(
-                                            f"http://localhost:8000/api/agents/{vendor['id']}",
+                                            f"http://138.197.176.62:8000/api/agents/{vendor['id']}",
                                             json={
                                                 "name": edited_name,
                                                 "internal_contact": edited_internal_contact,

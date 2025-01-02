@@ -6,7 +6,7 @@ import streamlit_folium
 import os
 
 # Obtener la URL del backend desde las variables de entorno
-BACKEND_URL = st.secrets.get("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = st.secrets.get("BACKEND_URL", "http://138.197.176.62:8000")
 
 def main():
     st.title("🏠 Property Collector")

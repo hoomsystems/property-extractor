@@ -1,4 +1,7 @@
 (function() {
+    // Actualizar todas las URLs del backend
+    const BACKEND_URL = 'http://138.197.176.62:8000/api';
+
     // Función para detectar el precio
     function detectPrice() {
         console.log("Detectando precio...");
@@ -427,7 +430,7 @@
 
     async function loadAgents() {
         try {
-            const response = await fetch('http://localhost:8000/api/agents');
+            const response = await fetch(`${BACKEND_URL}/agents`);
             if (response.ok) {
                 return await response.json();
             }
@@ -440,7 +443,7 @@
 
     async function checkIfUrlExists(url) {
         try {
-            const response = await fetch(`http://localhost:8000/api/properties/check_url?url=${encodeURIComponent(url)}`);
+            const response = await fetch(`${BACKEND_URL}/properties/check_url?url=${encodeURIComponent(url)}`);
             const data = await response.json();
             return data.exists;
         } catch (error) {
@@ -682,7 +685,7 @@
             console.log("Datos a enviar:", formData);
 
             try {
-                const response = await fetch('http://localhost:8000/api/properties', {
+                const response = await fetch(`${BACKEND_URL}/properties`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
