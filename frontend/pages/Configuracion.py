@@ -12,10 +12,21 @@ def main():
     
     # Código del bookmarklet
     bookmarklet_code = """javascript:(function(){
-    var s=document.createElement('script');
-    s.src='https://hoomextractor.online/static/collector.js';
-    document.body.appendChild(s);
-})();"""
+        var s = document.createElement('script');
+        s.type = 'text/javascript';
+        s.charset = 'UTF-8';
+        s.src = 'https://hoomextractor.online/static/collector.js';
+        s.onload = function() {
+            if (typeof createPopup === 'undefined') {
+                console.error('Error: collector.js no se cargó correctamente');
+            }
+        };
+        s.onerror = function() {
+            console.error('Error: No se pudo cargar collector.js');
+            alert('Error al cargar el extractor de propiedades. Por favor, intenta de nuevo.');
+        };
+        document.body.appendChild(s);
+    })();"""
     
     # Eliminar saltos de línea y espacios para el href
     bookmarklet_href = bookmarklet_code.replace('\n', '').replace(' ', '')

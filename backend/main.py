@@ -87,4 +87,15 @@ async def options_handler(request: Request):
             "Access-Control-Allow-Methods": "POST, GET, DELETE, PUT, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type"
         }
+    )
+
+@app.get("/static/collector.js")
+async def serve_collector():
+    return FileResponse(
+        "static/collector.js",
+        media_type="application/javascript",
+        headers={
+            "Content-Type": "application/javascript; charset=utf-8",
+            "Access-Control-Allow-Origin": "*"
+        }
     ) 
