@@ -6,71 +6,56 @@
         // Detector para Inmuebles24
         'inmuebles24.com': {
             images: function() {
+                console.log("Detectando imágenes en inmuebles24.com...");
                 const images = new Set();
                 
-                // Selectores específicos de inmuebles24 incluyendo carruseles
+                // Selectores específicos de inmuebles24
                 const selectors = [
+                    // Galerías principales
                     '[data-qa="POSTING_CARD_GALLERY"] img',
                     '[class*="Gallery"] img',
-                    '[class*="PostingCard"] img',
-                    '.posting-gallery img',
-                    '.gallery-box img',
-                    // Carruseles específicos de inmuebles24
+                    '[class*="gallery"] img',
+                    
+                    // Carruseles
                     '[class*="carousel"] img',
                     '[class*="slider"] img',
                     '[class*="Swiper"] img',
-                    // Atributos de datos comunes en inmuebles24
+                    
+                    // Contenedores de imágenes
+                    '.posting-gallery img',
+                    '.gallery-box img',
+                    '.property-gallery img',
+                    
+                    // Atributos de datos
                     'img[data-src]',
                     'img[data-lazy]',
-                    'img[data-full]'
+                    'img[data-full]',
+                    'img[data-original]'
                 ];
 
-                // Buscar en selectores específicos
                 selectors.forEach(selector => {
+                    console.log(`Buscando imágenes con selector: ${selector}`);
                     document.querySelectorAll(selector).forEach(img => {
-                        const src = img.getAttribute('src');
-                        // Buscar en múltiples atributos de datos
-                        const dataSources = [
-                            img.getAttribute('data-original'),
-                            img.getAttribute('data-lazy'),
-                            img.getAttribute('data-src'),
-                            img.getAttribute('data-full'),
-                            img.getAttribute('data-zoom'),
-                            img.getAttribute('data-high-res'),
-                            src
-                        ].filter(Boolean); // Eliminar valores null/undefined
+                        // Obtener todas las posibles fuentes de la imagen
+                        const sources = [
+                            img.src,
+                            img.dataset.src,
+                            img.dataset.lazy,
+                            img.dataset.full,
+                            img.dataset.original,
+                            img.currentSrc
+                        ].filter(Boolean);
 
-                        // Agregar todas las fuentes válidas
-                        dataSources.forEach(source => {
-                            if (source && !isThumbnail(source)) {
-                                images.add(source);
+                        sources.forEach(src => {
+                            if (src && !isThumbnail(src)) {
+                                console.log(`Imagen encontrada: ${src}`);
+                                images.add(src);
                             }
                         });
                     });
                 });
 
-                // Buscar en scripts (para carruseles dinámicos)
-                document.querySelectorAll('script').forEach(script => {
-                    try {
-                        const content = script.textContent;
-                        const jsonMatch = content.match(/window\.__INITIAL_STATE__\s*=\s*({.*?});/);
-                        if (jsonMatch) {
-                            const data = JSON.parse(jsonMatch[1]);
-                            // Buscar URLs de imágenes en el estado inicial
-                            JSON.stringify(data).match(/"(https?:\/\/[^"]+\.(?:jpg|jpeg|png|gif|webp))"/gi)
-                                ?.forEach(url => {
-                                    const cleanUrl = url.replace(/['"]/g, '');
-                                    if (!isThumbnail(cleanUrl)) {
-                                        images.add(cleanUrl);
-                                    }
-                                });
-                        }
-                    } catch (e) {
-                        console.log("Error parsing script:", e);
-                    }
-                });
-
-                return processImages(images);
+                return Array.from(images);
             }
         },
         
@@ -222,8 +207,11 @@
 
     // Uso
     function detectImages() {
+        console.log("Iniciando detección de imágenes...");
         const detector = detectSite();
-        return detector.images();
+        const images = detector.images();
+        console.log("Imágenes detectadas:", images);
+        return images;
     }
 
     // Función para detectar el precio
