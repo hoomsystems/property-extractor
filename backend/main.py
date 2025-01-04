@@ -69,11 +69,11 @@ os.makedirs("static/uploads", exist_ok=True)
 # Montar archivos estáticos
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Incluir rutas
-app.include_router(routes.router)
+# Incluir rutas con prefix /api
+app.include_router(routes.router, prefix="/api")
 
 # Ruta para verificar que collector.js es accesible
-@app.get("/test-collector")
+@app.get("/test-collector")  # Ya no necesita /api/ porque el router lo maneja
 async def test_collector():
     return FileResponse("static/collector.js")
 
