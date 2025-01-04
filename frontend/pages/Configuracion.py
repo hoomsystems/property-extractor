@@ -2,6 +2,14 @@ import streamlit as st
 import urllib.parse
 
 def main():
+    # Forzar UTF-8 en la página
+    st.set_page_config(
+        page_title="Configuración",
+        page_icon="⚙️",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    
     st.title("⚙️ Configuración")
     
     # Sección del Bookmarklet
@@ -11,19 +19,20 @@ def main():
         directamente desde cualquier sitio web inmobiliario.
     """)
     
-    # Código del bookmarklet con el prefijo javascript: incluido
-    bookmarklet_code_display = """javascript:(function(){
+    # Código del bookmarklet con codificación explícita
+    bookmarklet_code = """javascript:(function(){
+        document.charset = 'UTF-8';
         var s = document.createElement('script');
         s.type = 'text/javascript';
         s.charset = 'UTF-8';
-        document.characterSet = 'UTF-8';
         s.src = 'https://hoomextractor.online/static/collector.js';
         s.onload = function() {
             if (typeof detectImages === 'undefined') {
                 console.error('Error: collector.js no se cargó correctamente');
             } else {
-                console.log('Iniciando extractor de propiedades...');
                 try {
+                    document.querySelector('html').setAttribute('lang', 'es');
+                    document.querySelector('meta[charset]').setAttribute('charset', 'UTF-8');
                     createPopup();
                 } catch (e) {
                     console.error('Error al crear popup:', e);
@@ -37,7 +46,7 @@ def main():
     })();"""
     
     # Mostrar el código completo para copiar
-    st.code(bookmarklet_code_display, language="javascript")
+    st.code(bookmarklet_code, language="javascript")
     
     if st.button("📋 Copiar Código"):
         st.toast("¡Código copiado!")

@@ -91,7 +91,8 @@ async def serve_collector():
         headers={
             "Content-Type": "application/javascript; charset=UTF-8",
             "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "no-cache, no-store, must-revalidate"
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "X-Content-Type-Options": "nosniff"
         }
     )
 
