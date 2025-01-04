@@ -2,6 +2,230 @@
     // Actualizar todas las URLs del backend
     const BACKEND_URL = 'https://hoomextractor.online/api';
 
+    const siteDetectors = {
+        // Detector para Inmuebles24
+        'inmuebles24.com': {
+            images: function() {
+                const images = new Set();
+                
+                // Selectores específicos de inmuebles24 incluyendo carruseles
+                const selectors = [
+                    '[data-qa="POSTING_CARD_GALLERY"] img',
+                    '[class*="Gallery"] img',
+                    '[class*="PostingCard"] img',
+                    '.posting-gallery img',
+                    '.gallery-box img',
+                    // Carruseles específicos de inmuebles24
+                    '[class*="carousel"] img',
+                    '[class*="slider"] img',
+                    '[class*="Swiper"] img',
+                    // Atributos de datos comunes en inmuebles24
+                    'img[data-src]',
+                    'img[data-lazy]',
+                    'img[data-full]'
+                ];
+
+                // Buscar en selectores específicos
+                selectors.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(img => {
+                        const src = img.getAttribute('src');
+                        // Buscar en múltiples atributos de datos
+                        const dataSources = [
+                            img.getAttribute('data-original'),
+                            img.getAttribute('data-lazy'),
+                            img.getAttribute('data-src'),
+                            img.getAttribute('data-full'),
+                            img.getAttribute('data-zoom'),
+                            img.getAttribute('data-high-res'),
+                            src
+                        ].filter(Boolean); // Eliminar valores null/undefined
+
+                        // Agregar todas las fuentes válidas
+                        dataSources.forEach(source => {
+                            if (source && !isThumbnail(source)) {
+                                images.add(source);
+                            }
+                        });
+                    });
+                });
+
+                // Buscar en scripts (para carruseles dinámicos)
+                document.querySelectorAll('script').forEach(script => {
+                    try {
+                        const content = script.textContent;
+                        const jsonMatch = content.match(/window\.__INITIAL_STATE__\s*=\s*({.*?});/);
+                        if (jsonMatch) {
+                            const data = JSON.parse(jsonMatch[1]);
+                            // Buscar URLs de imágenes en el estado inicial
+                            JSON.stringify(data).match(/"(https?:\/\/[^"]+\.(?:jpg|jpeg|png|gif|webp))"/gi)
+                                ?.forEach(url => {
+                                    const cleanUrl = url.replace(/['"]/g, '');
+                                    if (!isThumbnail(cleanUrl)) {
+                                        images.add(cleanUrl);
+                                    }
+                                });
+                        }
+                    } catch (e) {
+                        console.log("Error parsing script:", e);
+                    }
+                });
+
+                return processImages(images);
+            }
+        },
+        
+        // Detector para Vivanuncios
+        'vivanuncios.com.mx': {
+            images: function() {
+                const images = new Set();
+                
+                // Selectores específicos de Vivanuncios incluyendo carruseles
+                const selectors = [
+                    '.gallery-content img',
+                    '.re-DetailHeader img',
+                    '[class*="PhotoGallery"] img',
+                    '[class*="Carousel"] img',
+                    // Carruseles específicos de Vivanuncios
+                    '.slick-slide img',
+                    '.owl-item img',
+                    '[class*="slider"] img',
+                    // Contenedores de galería
+                    '[data-gallery] img',
+                    '[class*="lightbox"] img'
+                ];
+
+                // Buscar en selectores y atributos de datos
+                selectors.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(img => {
+                        const dataSources = [
+                            img.getAttribute('src'),
+                            img.getAttribute('data-original'),
+                            img.getAttribute('data-lazy'),
+                            img.getAttribute('data-src'),
+                            img.getAttribute('data-full-url')
+                        ].filter(Boolean);
+
+                        dataSources.forEach(source => {
+                            if (source && !isThumbnail(source)) {
+                                images.add(source);
+                            }
+                        });
+                    });
+                });
+
+                return processImages(images);
+            }
+        },
+
+        // Detector para Lamudi
+        'lamudi.com.mx': {
+            images: function() {
+                const images = new Set();
+                
+                // Selectores específicos de Lamudi
+                const selectors = [
+                    '.swiper-wrapper img',
+                    '.gallery-top img',
+                    '.property-gallery img',
+                    '[class*="Gallery"] img'
+                ];
+
+                selectors.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(img => {
+                        const src = img.getAttribute('src');
+                        if (src && !isThumbnail(src)) {
+                            const originalSrc = img.getAttribute('data-lazy') || 
+                                             img.getAttribute('data-src') || 
+                                             src;
+                            images.add(originalSrc);
+                        }
+                    });
+                });
+
+                return processImages(images);
+            }
+        },
+
+        // Detector genérico (fallback)
+        'default': {
+            images: function() {
+                const images = new Set();
+                
+                // 1. Buscar en elementos img
+                document.querySelectorAll('img').forEach(img => {
+                    const src = img.getAttribute('src');
+                    if (src && !isThumbnail(src)) {
+                        const originalSrc = img.getAttribute('data-original') || 
+                                         img.getAttribute('data-lazy') ||
+                                         img.getAttribute('data-src') ||
+                                         img.getAttribute('data-full') ||
+                                         src;
+                        images.add(originalSrc);
+                    }
+                });
+
+                // 2. Buscar en galerías genéricas
+                const gallerySelectors = [
+                    '[class*="gallery"]', '[class*="carousel"]', '[class*="slider"]',
+                    '[class*="galeria"]', '[class*="lightbox"]', '[class*="photo"]',
+                    '[id*="gallery"]', '[id*="carousel"]', '[id*="slider"]',
+                    '[role="gallery"]', '[role="slider"]'
+                ].join(',');
+
+                document.querySelectorAll(gallerySelectors).forEach(element => {
+                    element.querySelectorAll('img').forEach(img => {
+                        const src = img.getAttribute('src');
+                        if (src && !isThumbnail(src)) {
+                            images.add(src);
+                        }
+                    });
+                });
+
+                return processImages(images);
+            }
+        }
+    };
+
+    // Función auxiliar para procesar imágenes
+    function processImages(images) {
+        // Convertir URLs relativas a absolutas y filtrar
+        const processedImages = Array.from(images).map(url => {
+            try {
+                return new URL(url, window.location.href).href;
+            } catch (e) {
+                return url;
+            }
+        }).filter(url => {
+            return url.match(/\.(jpg|jpeg|png|gif|webp)/i) && 
+                   url.startsWith('http') && 
+                   !isThumbnail(url);
+        });
+
+        // Eliminar duplicados y ordenar por tamaño probable
+        const uniqueImages = [...new Set(processedImages)]
+            .sort((a, b) => b.length - a.length);
+
+        console.log(`Detectadas ${uniqueImages.length} imágenes únicas:`, uniqueImages);
+        return uniqueImages;
+    }
+
+    // Función para detectar el sitio y usar el detector apropiado
+    function detectSite() {
+        const hostname = window.location.hostname;
+        for (const site in siteDetectors) {
+            if (hostname.includes(site)) {
+                return siteDetectors[site];
+            }
+        }
+        return siteDetectors.default;
+    }
+
+    // Uso
+    function detectImages() {
+        const detector = detectSite();
+        return detector.images();
+    }
+
     // Función para detectar el precio
     function detectPrice() {
         console.log("Detectando precio...");
