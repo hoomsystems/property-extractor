@@ -6,7 +6,7 @@ import streamlit_folium
 import os
 
 # Obtener la URL del backend desde las variables de entorno
-BACKEND_URL = st.secrets.get("BACKEND_URL", "http://138.197.189.34:8000")
+BACKEND_URL = st.secrets.get("BACKEND_URL", "https://hoomextractor.online/api")
 
 def main():
     st.title("🏠 Property Collector")
