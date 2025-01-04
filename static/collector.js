@@ -934,7 +934,7 @@
             }
         });
     }
-
+//test de codigo
     // Iniciar el proceso
     console.log("Iniciando Property Collector...");
     createPopup();
