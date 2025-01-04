@@ -934,8 +934,16 @@
             }
         });
     }
-//test de codigo
-    // Iniciar el proceso
-    console.log("Iniciando Property Collector...");
-    createPopup();
+
+    // Hacer las funciones disponibles globalmente
+    window.detectImages = detectImages;
+    window.createPopup = createPopup;
+    window.detectPrice = detectPrice;
+    window.detectLocation = detectLocation;
+    window.detectFeatures = detectFeatures;
+    window.detectGeneralFeatures = detectGeneralFeatures;
+    
+    // No ejecutar createPopup automáticamente
+    // Dejar que el bookmarklet lo haga
+    console.log("Collector.js cargado correctamente");
 })(); 

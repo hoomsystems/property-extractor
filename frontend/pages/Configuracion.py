@@ -17,13 +17,14 @@ def main():
         s.charset = 'UTF-8';
         s.src = 'https://hoomextractor.online/static/collector.js';
         s.onload = function() {
-            if (typeof createPopup === 'undefined') {
+            if (typeof detectImages === 'undefined') {
                 console.error('Error: collector.js no se cargó correctamente');
+            } else {
+                createPopup();
             }
         };
-        s.onerror = function() {
-            console.error('Error: No se pudo cargar collector.js');
-            alert('Error al cargar el extractor de propiedades. Por favor, intenta de nuevo.');
+        s.onerror = function(e) {
+            console.error('Error al cargar collector.js:', e);
         };
         document.body.appendChild(s);
     })();"""
