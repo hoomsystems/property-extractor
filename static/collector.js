@@ -6,56 +6,62 @@
         // Detector para Inmuebles24
         'inmuebles24.com': {
             images: function() {
-                console.log("Detectando imágenes en inmuebles24.com...");
+                debugLog("🔍 Iniciando detección de imágenes en inmuebles24.com");
                 const images = new Set();
-                
-                // Selectores específicos de inmuebles24
-                const selectors = [
-                    // Galerías principales
-                    '[data-qa="POSTING_CARD_GALLERY"] img',
-                    '[class*="Gallery"] img',
-                    '[class*="gallery"] img',
-                    
-                    // Carruseles
-                    '[class*="carousel"] img',
-                    '[class*="slider"] img',
-                    '[class*="Swiper"] img',
-                    
-                    // Contenedores de imágenes
-                    '.posting-gallery img',
-                    '.gallery-box img',
-                    '.property-gallery img',
-                    
-                    // Atributos de datos
-                    'img[data-src]',
-                    'img[data-lazy]',
-                    'img[data-full]',
-                    'img[data-original]'
-                ];
 
-                selectors.forEach(selector => {
-                    console.log(`Buscando imágenes con selector: ${selector}`);
-                    document.querySelectorAll(selector).forEach(img => {
-                        // Obtener todas las posibles fuentes de la imagen
-                        const sources = [
-                            img.src,
-                            img.dataset.src,
-                            img.dataset.lazy,
-                            img.dataset.full,
-                            img.dataset.original,
-                            img.currentSrc
-                        ].filter(Boolean);
-
-                        sources.forEach(src => {
-                            if (src && !isThumbnail(src)) {
-                                console.log(`Imagen encontrada: ${src}`);
-                                images.add(src);
-                            }
-                        });
-                    });
+                // 1. Buscar en la galería principal
+                debugLog("Buscando en galería principal...");
+                document.querySelectorAll('.gallery-content img, .re-DetailHeader img').forEach(img => {
+                    debugLog("Elemento de imagen encontrado:", img);
+                    const sources = this.getImageSources(img);
+                    sources.forEach(src => images.add(src));
                 });
 
-                return Array.from(images);
+                // 2. Buscar en el estado inicial de la página
+                debugLog("Buscando en scripts...");
+                document.querySelectorAll('script').forEach(script => {
+                    if (script.textContent.includes('__INITIAL_STATE__')) {
+                        debugLog("Script con estado inicial encontrado");
+                        this.extractImagesFromScript(script, images);
+                    }
+                });
+
+                const result = Array.from(images).filter(url => isValidImageUrl(url));
+                debugLog(`✅ Detección completada. Encontradas ${result.length} imágenes:`, result);
+                return result;
+            },
+
+            getImageSources: function(img) {
+                const sources = new Set();
+                const attrs = ['src', 'data-src', 'data-lazy', 'data-original', 'data-full'];
+                
+                attrs.forEach(attr => {
+                    const value = img.getAttribute(attr);
+                    if (value && isValidImageUrl(value)) {
+                        debugLog(`Imagen encontrada en ${attr}:`, value);
+                        sources.add(value);
+                    }
+                });
+
+                return sources;
+            },
+
+            extractImagesFromScript: function(script, images) {
+                try {
+                    const content = script.textContent;
+                    const matches = content.match(/"(https?:\/\/[^"]+\.(?:jpg|jpeg|png|gif|webp))"/gi);
+                    if (matches) {
+                        matches.forEach(url => {
+                            const cleanUrl = url.replace(/['"]/g, '');
+                            if (isValidImageUrl(cleanUrl)) {
+                                debugLog("Imagen encontrada en script:", cleanUrl);
+                                images.add(cleanUrl);
+                            }
+                        });
+                    }
+                } catch (e) {
+                    debugLog("Error extrayendo imágenes del script:", e);
+                }
             }
         },
         
@@ -207,10 +213,14 @@
 
     // Uso
     function detectImages() {
-        console.log("Iniciando detección de imágenes...");
+        debugLog("🚀 Iniciando detección de imágenes");
+        const hostname = window.location.hostname;
+        debugLog(`📍 Sitio detectado: ${hostname}`);
+        
         const detector = detectSite();
         const images = detector.images();
-        console.log("Imágenes detectadas:", images);
+        
+        debugLog(`🎯 Detección finalizada. ${images.length} imágenes encontradas`);
         return images;
     }
 
@@ -931,6 +941,24 @@
                 alert('Error de conexión. Por favor, intenta de nuevo más tarde.');
             }
         });
+    }
+
+    function debugLog(message, data = null) {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] ${message}`);
+        if (data) {
+            console.log(data);
+        }
+    }
+
+    // Función para verificar si una URL es válida
+    function isValidImageUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            return /\.(jpg|jpeg|png|gif|webp)/i.test(urlObj.pathname);
+        } catch (e) {
+            return false;
+        }
     }
 
     // Hacer las funciones disponibles globalmente
