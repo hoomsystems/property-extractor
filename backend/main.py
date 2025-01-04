@@ -19,25 +19,12 @@ print("Tablas creadas exitosamente")
 app = FastAPI(title="Property Collector API")
 
 # Configurar CORS de manera más permisiva
-origins = [
-    "http://localhost",
-    "http://localhost:8000",
-    "http://localhost:8501",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:8501",
-    "https://www.inmuebles24.com",
-    "https://inmuebles24.com",
-    "*"  # Permitir todos los orígenes
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=86400,
 )
 
 # Middleware para manejar errores CORS
@@ -95,6 +82,9 @@ async def serve_collector():
             "X-Content-Type-Options": "nosniff"
         }
     )
+
+# Incluir las rutas del router
+app.include_router(routes.router, prefix="/api")
 
 # Después de esta ruta, montar los estáticos
 app.mount("/static", StaticFiles(directory="static"), name="static") 

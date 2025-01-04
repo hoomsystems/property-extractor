@@ -43,7 +43,7 @@ async def create_property(property_data: PropertyCreate, db: Session = Depends(g
     return db_property
 
 @router.get("/properties", response_model=PaginatedResponse)
-def get_properties(
+async def get_properties(
     db: Session = Depends(get_db),
     search: Optional[str] = None,
     min_price: Optional[float] = None,
@@ -136,7 +136,7 @@ async def update_property(
     return property
 
 @router.delete("/properties/{property_id}")
-def delete_property(property_id: int, db: Session = Depends(get_db)):
+async def delete_property(property_id: int, db: Session = Depends(get_db)):
     property = db.query(Property).filter(Property.id == property_id).first()
     if not property:
         raise HTTPException(status_code=404, detail="Propiedad no encontrada")
@@ -195,7 +195,7 @@ async def create_agent(agent_data: RealEstateAgentCreate, db: Session = Depends(
     return agent
 
 @router.get("/agents", response_model=List[RealEstateAgentResponse])
-def get_agents(db: Session = Depends(get_db)):
+async def get_agents(db: Session = Depends(get_db)):
     return db.query(RealEstateAgent).all()
 
 @router.put("/agents/{agent_id}", response_model=RealEstateAgentResponse)
@@ -226,6 +226,6 @@ def delete_agent(agent_id: int, db: Session = Depends(get_db)):
     return {"message": "Vendedor eliminado"}
 
 @router.get("/properties/check_url")
-def check_property_url(url: str, db: Session = Depends(get_db)):
+async def check_property_url(url: str, db: Session = Depends(get_db)):
     property = db.query(Property).filter(Property.url == url).first()
     return {"exists": property is not None} 
