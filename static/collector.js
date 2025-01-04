@@ -263,6 +263,15 @@
         return '';
     }
 
+    // Función para decodificar texto UTF-8
+    function decodeUTF8(text) {
+        try {
+            return decodeURIComponent(escape(text));
+        } catch (e) {
+            return text;
+        }
+    }
+
     // Función para detectar la ubicación
     function detectLocation() {
         console.log("Detectando ubicación...");
@@ -271,7 +280,7 @@
         );
 
         for (let element of locationElements) {
-            const text = element.textContent.trim();
+            const text = decodeUTF8(element.textContent.trim());
             if (text) {
                 console.log("Ubicación detectada:", text);
                 return text;
@@ -635,16 +644,16 @@
         return info;
     }
 
+    // Función para detectar la descripción
     function detectDescription() {
         console.log("Detectando descripción...");
         const descriptionElements = document.querySelectorAll(
-            '[class*="description"],[class*="descripcion"],[class*="detail"],[class*="detalle"],' +
-            '[class*="about"],[class*="content"],[itemprop="description"]'
+            '[class*="description"],[class*="descripcion"],[id*="description"],[id*="descripcion"]'
         );
 
         for (let element of descriptionElements) {
-            const text = element.textContent.trim();
-            if (text.length > 20) { // Asegurarnos de que es una descripción válida
+            const text = decodeUTF8(element.textContent.trim());
+            if (text) {
                 console.log("Descripción detectada:", text);
                 return text;
             }
@@ -698,9 +707,10 @@
         const popup = document.createElement('div');
         popup.className = 'property-collector-popup';
         popup.innerHTML = `
-            <div class="popup-form">
-                <h3>Guardar Propiedad</h3>
-                <form id="propertyForm">
+            <div class="popup-content">
+                <meta charset="UTF-8">
+                <form>
+                    <h3>Guardar Propiedad</h3>
                     <h4>Información de la Propiedad</h4>
                     <input type="text" id="title" placeholder="Título" value="${document.title}" required>
                     <input type="text" id="price" placeholder="Precio" value="${detectedInfo.price}" required>
