@@ -11,8 +11,8 @@ def main():
         directamente desde cualquier sitio web inmobiliario.
     """)
     
-    # Código del bookmarklet
-    bookmarklet_code = """(function(){
+    # Código del bookmarklet con el prefijo javascript: incluido
+    bookmarklet_code_display = """javascript:(function(){
         var s = document.createElement('script');
         s.type = 'text/javascript';
         s.charset = 'UTF-8';
@@ -36,17 +36,8 @@ def main():
         document.body.appendChild(s);
     })();"""
     
-    # Generar el href del bookmarklet correctamente
-    bookmarklet_href = "javascript:" + urllib.parse.quote(bookmarklet_code.replace('\n', ' ').strip())
-    
-    # Instrucciones de instalación
-    st.subheader("📥 Instalación")
-    st.markdown("""
-    1. **Copiar el código del bookmarklet:**
-    """)
-    
-    # Mostrar el código para copiar
-    st.code(bookmarklet_code, language="javascript")
+    # Mostrar el código completo para copiar
+    st.code(bookmarklet_code_display, language="javascript")
     
     if st.button("📋 Copiar Código"):
         st.toast("¡Código copiado!")
