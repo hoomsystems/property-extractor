@@ -15,7 +15,7 @@ router = APIRouter()
 UPLOAD_DIR = "static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@router.post("/api/properties", response_model=PropertyResponse)
+@router.post("/properties", response_model=PropertyResponse)
 async def create_property(property_data: PropertyCreate, db: Session = Depends(get_db)):
     # Crear o actualizar agente inmobiliario si existe información
     agent_id = None
@@ -42,7 +42,7 @@ async def create_property(property_data: PropertyCreate, db: Session = Depends(g
     db.refresh(db_property)
     return db_property
 
-@router.get("/api/properties", response_model=PaginatedResponse)
+@router.get("/properties", response_model=PaginatedResponse)
 def get_properties(
     db: Session = Depends(get_db),
     search: Optional[str] = None,
@@ -104,7 +104,7 @@ def get_properties(
             detail=f"Error interno del servidor: {str(e)}"
         )
 
-@router.put("/api/properties/{property_id}", response_model=PropertyResponse)
+@router.put("/properties/{property_id}", response_model=PropertyResponse)
 async def update_property(
     property_id: int,
     property_data: PropertyUpdate,
@@ -135,7 +135,7 @@ async def update_property(
     db.refresh(property)
     return property
 
-@router.delete("/api/properties/{property_id}")
+@router.delete("/properties/{property_id}")
 def delete_property(property_id: int, db: Session = Depends(get_db)):
     property = db.query(Property).filter(Property.id == property_id).first()
     if not property:
@@ -155,7 +155,7 @@ def delete_property(property_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Propiedad eliminada"}
 
-@router.post("/api/properties/{property_id}/images")
+@router.post("/properties/{property_id}/images")
 async def upload_images(
     property_id: int,
     files: List[UploadFile] = File(...),
@@ -186,7 +186,7 @@ async def upload_images(
     return {"uploaded_images": uploaded_images}
 
 # Endpoints para vendedores
-@router.post("/api/agents", response_model=RealEstateAgentResponse)
+@router.post("/agents", response_model=RealEstateAgentResponse)
 async def create_agent(agent_data: RealEstateAgentCreate, db: Session = Depends(get_db)):
     agent = RealEstateAgent(**agent_data.dict())
     db.add(agent)
@@ -194,11 +194,11 @@ async def create_agent(agent_data: RealEstateAgentCreate, db: Session = Depends(
     db.refresh(agent)
     return agent
 
-@router.get("/api/agents", response_model=List[RealEstateAgentResponse])
+@router.get("/agents", response_model=List[RealEstateAgentResponse])
 def get_agents(db: Session = Depends(get_db)):
     return db.query(RealEstateAgent).all()
 
-@router.put("/api/agents/{agent_id}", response_model=RealEstateAgentResponse)
+@router.put("/agents/{agent_id}", response_model=RealEstateAgentResponse)
 async def update_agent(
     agent_id: int,
     agent_data: RealEstateAgentCreate,
@@ -215,7 +215,7 @@ async def update_agent(
     db.refresh(agent)
     return agent
 
-@router.delete("/api/agents/{agent_id}")
+@router.delete("/agents/{agent_id}")
 def delete_agent(agent_id: int, db: Session = Depends(get_db)):
     agent = db.query(RealEstateAgent).filter(RealEstateAgent.id == agent_id).first()
     if not agent:
@@ -225,7 +225,7 @@ def delete_agent(agent_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Vendedor eliminado"}
 
-@router.get("/api/properties/check_url")
+@router.get("/properties/check_url")
 def check_property_url(url: str, db: Session = Depends(get_db)):
     property = db.query(Property).filter(Property.url == url).first()
     return {"exists": property is not None} 
