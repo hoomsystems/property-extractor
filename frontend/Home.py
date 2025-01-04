@@ -71,6 +71,7 @@ def main():
             }
         )
         
+        
         # Agregar logs de la respuesta
         st.write(f"Status code: {response.status_code}")
         
