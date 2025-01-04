@@ -11,11 +11,11 @@ def main():
     """)
     
     # Código del bookmarklet
-    bookmarklet_code = """javascript:(function(){
+    bookmarklet_code = """(function(){
         var s = document.createElement('script');
         s.type = 'text/javascript';
         s.charset = 'UTF-8';
-        document.characterSet = 'UTF-8';  // Forzar UTF-8 en el documento
+        document.characterSet = 'UTF-8';
         s.src = 'https://hoomextractor.online/static/collector.js';
         s.onload = function() {
             if (typeof detectImages === 'undefined') {
@@ -35,8 +35,8 @@ def main():
         document.body.appendChild(s);
     })();"""
     
-    # Eliminar saltos de línea y espacios para el href
-    bookmarklet_href = bookmarklet_code.replace('\n', '').replace(' ', '')
+    # Generar el href del bookmarklet correctamente
+    bookmarklet_href = "javascript:" + bookmarklet_code.replace('\n', ' ').strip()
     
     # Instrucciones de instalación
     st.subheader("📥 Instalación")
