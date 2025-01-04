@@ -63,7 +63,7 @@ def main():
         
         filters = getattr(st.session_state, 'filters', {})
         response = requests.get(
-            f"{BACKEND_URL}/api/properties",
+            f"{BACKEND_URL}/properties",
             params={
                 "page": page,
                 "per_page": items_per_page,
