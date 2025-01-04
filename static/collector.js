@@ -1,6 +1,6 @@
 (function() {
     // Actualizar todas las URLs del backend
-    const BACKEND_URL = 'http://138.197.176.62:8000/api';
+    const BACKEND_URL = 'https://hoomextractor.online/api';
 
     // Función para detectar el precio
     function detectPrice() {
@@ -706,7 +706,7 @@
                 }
             } catch (error) {
                 console.error("Error de conexión:", error);
-                alert('Error de conexión. Asegúrate de que el backend esté corriendo en http://localhost:8000');
+                alert('Error de conexión. Por favor, intenta de nuevo más tarde.');
             }
         });
     }
