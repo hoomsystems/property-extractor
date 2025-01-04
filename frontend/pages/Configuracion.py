@@ -1,4 +1,5 @@
 import streamlit as st
+import urllib.parse
 
 def main():
     st.title("⚙️ Configuración")
@@ -36,7 +37,7 @@ def main():
     })();"""
     
     # Generar el href del bookmarklet correctamente
-    bookmarklet_href = "javascript:" + bookmarklet_code.replace('\n', ' ').strip()
+    bookmarklet_href = "javascript:" + urllib.parse.quote(bookmarklet_code.replace('\n', ' ').strip())
     
     # Instrucciones de instalación
     st.subheader("📥 Instalación")
