@@ -15,12 +15,18 @@ def main():
         var s = document.createElement('script');
         s.type = 'text/javascript';
         s.charset = 'UTF-8';
+        document.characterSet = 'UTF-8';  // Forzar UTF-8 en el documento
         s.src = 'https://hoomextractor.online/static/collector.js';
         s.onload = function() {
             if (typeof detectImages === 'undefined') {
                 console.error('Error: collector.js no se cargó correctamente');
             } else {
-                createPopup();
+                console.log('Iniciando extractor de propiedades...');
+                try {
+                    createPopup();
+                } catch (e) {
+                    console.error('Error al crear popup:', e);
+                }
             }
         };
         s.onerror = function(e) {

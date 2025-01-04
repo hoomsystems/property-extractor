@@ -66,12 +66,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 os.makedirs("static", exist_ok=True)
 os.makedirs("static/uploads", exist_ok=True)
 
-# Montar archivos estáticos
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Incluir rutas con prefix /api
-app.include_router(routes.router, prefix="/api")
-
 # Ruta para verificar que collector.js es accesible
 @app.get("/test-collector")  # Ya no necesita /api/ porque el router lo maneja
 async def test_collector():
@@ -95,7 +89,11 @@ async def serve_collector():
         "static/collector.js",
         media_type="application/javascript",
         headers={
-            "Content-Type": "application/javascript; charset=utf-8",
-            "Access-Control-Allow-Origin": "*"
+            "Content-Type": "application/javascript; charset=UTF-8",
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "no-cache, no-store, must-revalidate"
         }
-    ) 
+    )
+
+# Después de esta ruta, montar los estáticos
+app.mount("/static", StaticFiles(directory="static"), name="static") 
