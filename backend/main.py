@@ -8,8 +8,8 @@ import backend.routes as routes
 import os
 
 # Eliminar la base de datos si existe (solo durante desarrollo)
-if os.path.exists("properties.db"):
-    os.remove("properties.db")
+#if os.path.exists("properties.db"):
+#    os.remove("properties.db")
 
 # Crear todas las tablas
 print("Creando tablas en la base de datos...")
