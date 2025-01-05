@@ -226,14 +226,15 @@
     // Uso
     function detectImages() {
         debugLog("🚀 Iniciando detección de imágenes");
-        const hostname = window.location.hostname;
-        debugLog(`📍 Sitio detectado: ${hostname}`);
-        
-        const detector = detectSite();
-        const images = detector.images();
-        
-        debugLog(`🎯 Detección finalizada. ${images.length} imágenes encontradas`);
-        return images;
+        return new Promise((resolve) => {
+            // Esperar 2 segundos para que carguen las imágenes
+            setTimeout(() => {
+                const detector = detectSite();
+                const images = detector.images();
+                debugLog(`🎯 Detección finalizada. ${images.length} imágenes encontradas`);
+                resolve(images);
+            }, 2000);
+        });
     }
 
     // Función para detectar el precio

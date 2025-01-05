@@ -1,6 +1,19 @@
 import streamlit as st
 import urllib.parse
 
+def generate_bookmarklet():
+    return f"""javascript:(function(){{
+        var script = document.createElement('script');
+        script.src = 'https://hoomextractor.online/static/collector.js';
+        document.body.appendChild(script);
+        script.onload = function() {{
+            // Esperar a que la página cargue completamente
+            setTimeout(function() {{
+                createPopup();
+            }}, 1000);
+        }};
+    }})();"""
+
 def main():
     # Forzar UTF-8 en la página
     st.set_page_config(
@@ -20,30 +33,7 @@ def main():
     """)
     
     # Código del bookmarklet con codificación explícita
-    bookmarklet_code = """javascript:(function(){
-        document.charset = 'UTF-8';
-        var s = document.createElement('script');
-        s.type = 'text/javascript';
-        s.charset = 'UTF-8';
-        s.src = 'https://hoomextractor.online/static/collector.js';
-        s.onload = function() {
-            if (typeof detectImages === 'undefined') {
-                console.error('Error: collector.js no se cargó correctamente');
-            } else {
-                try {
-                    document.querySelector('html').setAttribute('lang', 'es');
-                    document.querySelector('meta[charset]').setAttribute('charset', 'UTF-8');
-                    createPopup();
-                } catch (e) {
-                    console.error('Error al crear popup:', e);
-                }
-            }
-        };
-        s.onerror = function(e) {
-            console.error('Error al cargar collector.js:', e);
-        };
-        document.body.appendChild(s);
-    })();"""
+    bookmarklet_code = generate_bookmarklet()
     
     # Mostrar el código completo para copiar
     st.code(bookmarklet_code, language="javascript")
