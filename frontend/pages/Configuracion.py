@@ -2,17 +2,26 @@ import streamlit as st
 import urllib.parse
 
 def generate_bookmarklet():
-    return f"""javascript:(function(){{
+    return """javascript:(function(){
+        console.log('🚀 Iniciando bookmarklet...');
         var script = document.createElement('script');
         script.src = 'https://hoomextractor.online/static/collector.js';
+        script.onload = function() {
+            console.log('✅ Script cargado');
+            try {
+                console.log('📦 Creando popup...');
+                createPopup();
+            } catch(e) {
+                console.error('❌ Error:', e);
+                alert('Error: ' + e.message);
+            }
+        };
+        script.onerror = function(e) {
+            console.error('❌ Error cargando script:', e);
+            alert('Error cargando el script');
+        };
         document.body.appendChild(script);
-        script.onload = async function() {{
-            // Esperar a que la página cargue completamente
-            setTimeout(async function() {{
-                await createPopup();
-            }}, 1000);
-        }};
-    }})();"""
+    })();"""
 
 def main():
     # Forzar UTF-8 en la página

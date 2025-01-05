@@ -697,264 +697,37 @@
     }
 
     async function createPopup() {
-        console.log("Creando popup...");
-        const currentURL = window.location.href;
-        
-        // Verificar si la URL ya existe
-        const urlExists = await checkIfUrlExists(currentURL);
-        if (urlExists) {
-            alert('Esta propiedad ya está guardada en el sistema.');
-            return;
+        try {
+            console.log("🏁 Iniciando createPopup");
+            
+            // Verificar URL
+            const currentURL = window.location.href;
+            console.log("📍 URL actual:", currentURL);
+            
+            // Detectar imágenes
+            console.log("🔍 Detectando imágenes...");
+            const images = await detectImages();
+            console.log("📸 Imágenes encontradas:", images);
+            
+            // Crear popup básico para pruebas
+            const popup = document.createElement('div');
+            popup.style.position = 'fixed';
+            popup.style.top = '20px';
+            popup.style.right = '20px';
+            popup.style.backgroundColor = 'white';
+            popup.style.padding = '20px';
+            popup.style.border = '1px solid black';
+            popup.style.zIndex = '9999';
+            popup.innerHTML = `
+                <h3>Imágenes Detectadas: ${images.length}</h3>
+                <button onclick="this.parentElement.remove()">Cerrar</button>
+            `;
+            document.body.appendChild(popup);
+            
+        } catch (error) {
+            console.error("❌ Error en createPopup:", error);
+            alert('Error: ' + error.message);
         }
-        
-        const detectedInfo = detectInmuebles24Info();
-        // Esperar a que se detecten las imágenes
-        const images = await detectImages();
-        const description = detectDescription();
-        
-        // Cargar lista de vendedores
-        const agents = await loadAgents();
-        console.log("Vendedores cargados:", agents);
-        
-        const popup = document.createElement('div');
-        popup.className = 'property-collector-popup';
-        popup.innerHTML = `
-            <div class="popup-content">
-                <meta charset="UTF-8">
-                <form>
-                    <h3>Guardar Propiedad</h3>
-                    <h4>Información de la Propiedad</h4>
-                    <input type="text" id="title" placeholder="Título" value="${document.title}" required>
-                    <input type="text" id="price" placeholder="Precio" value="${detectedInfo.price}" required>
-                    <input type="text" id="location" placeholder="Ubicación" value="${detectedInfo.location}" required>
-                    <input type="hidden" id="url" value="${currentURL}">
-                    
-                    <h4>Características</h4>
-                    <div class="form-row">
-                        <input type="number" id="construction_size" placeholder="M² de Construcción" 
-                            value="${detectedInfo.features.construction_size || ''}" step="0.01">
-                        <input type="number" id="lot_size" placeholder="M² de Terreno" 
-                            value="${detectedInfo.features.lot_size || ''}" step="0.01">
-                    </div>
-                    <div class="form-row">
-                        <input type="number" id="bedrooms" placeholder="Número de Recámaras" 
-                            value="${detectedInfo.features.bedrooms || ''}" step="1">
-                        <input type="number" id="bathrooms" placeholder="Número de Baños" 
-                            value="${detectedInfo.features.bathrooms || ''}" step="0.5">
-                    </div>
-                    <div class="form-row">
-                        <input type="number" id="parking_spaces" placeholder="Espacios de Estacionamiento" 
-                            value="${detectedInfo.features.parking_spaces || ''}" step="1">
-                        <input type="number" id="floors" placeholder="Número de Niveles" 
-                            value="${detectedInfo.features.floors || ''}" step="1">
-                    </div>
-                    
-                    <h4>Descripción de la Propiedad</h4>
-                    <textarea id="description" placeholder="Descripción de la propiedad" rows="4">${description}</textarea>
-                    
-                    <h4>Notas Personales</h4>
-                    <textarea id="notes" placeholder="Agrega tus notas personales sobre esta propiedad" rows="4"></textarea>
-                    
-                    <h4>Vendedor</h4>
-                    <div class="agent-section">
-                        <select id="agent_select" class="full-width">
-                            <option value="">Seleccionar vendedor existente</option>
-                            ${agents.map(agent => `
-                                <option value="${agent.id}">${agent.name} (${agent.email || agent.phone || 'Sin contacto'})</option>
-                            `).join('')}
-                            <option value="new">+ Agregar nuevo vendedor</option>
-                        </select>
-                        
-                        <div id="new_agent_fields" style="display: none; margin-top: 10px;">
-                            <input type="text" id="new_agent_name" placeholder="Nombre del vendedor">
-                            <input type="tel" id="new_agent_phone" placeholder="Teléfono">
-                            <input type="email" id="new_agent_email" placeholder="Email">
-                            <input type="url" id="new_agent_website" placeholder="Sitio web">
-                        </div>
-                    </div>
-                    
-                    <h4>Imágenes Detectadas (${images.length})</h4>
-                    <div class="images-grid">
-                        ${images.map((img, index) => `
-                            <div class="image-item">
-                                <img src="${img}" alt="Property image ${index + 1}">
-                                <label>
-                                    <input type="checkbox" name="selected_images" value="${img}" checked>
-                                    Incluir
-                                </label>
-                                <label>
-                                    <input type="radio" name="main_image" value="${img}" ${index === 0 ? 'checked' : ''}>
-                                    Imagen principal
-                                </label>
-                            </div>
-                        `).join('')}
-                    </div>
-                    
-                    <button type="submit">Guardar</button>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()">Cerrar</button>
-                </form>
-            </div>
-        `;
-
-        // Agregar estilos adicionales
-        const style = document.createElement('style');
-        style.textContent = `
-            .property-collector-popup {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: white;
-                padding: 15px;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                z-index: 999999;
-                max-height: 90vh;
-                overflow-y: auto;
-                width: 400px;
-            }
-            .property-collector-popup input,
-            .property-collector-popup textarea {
-                display: block;
-                width: 100%;
-                margin: 5px 0;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
-            .form-row {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 10px;
-            }
-            .form-row input {
-                flex: 1;
-            }
-            .images-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-                margin: 10px 0;
-            }
-            .image-item img {
-                max-width: 100%;
-                height: auto;
-                margin-bottom: 5px;
-            }
-            h4 {
-                margin-top: 15px;
-                margin-bottom: 10px;
-            }
-            .agent-section {
-                margin: 10px 0;
-            }
-            .full-width {
-                width: 100%;
-                padding: 8px;
-                margin: 5px 0;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
-        `;
-
-        document.head.appendChild(style);
-        document.body.appendChild(popup);
-
-        // Manejar cambio en select de vendedor
-        const agentSelect = popup.querySelector('#agent_select');
-        const newAgentFields = popup.querySelector('#new_agent_fields');
-        
-        agentSelect.addEventListener('change', (e) => {
-            if (e.target.value === 'new') {
-                newAgentFields.style.display = 'block';
-            } else {
-                newAgentFields.style.display = 'none';
-                if (e.target.value) {
-                    const selectedAgent = agents.find(a => a.id === parseInt(e.target.value));
-                    if (selectedAgent) {
-                        // No necesitamos llenar los campos antiguos ya que los eliminamos
-                    }
-                }
-            }
-        });
-
-        // Modificar el manejador del formulario
-        popup.querySelector('form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            console.log("Enviando formulario...");
-
-            // Obtener imágenes seleccionadas
-            const selectedImages = Array.from(
-                document.querySelectorAll('input[name="selected_images"]:checked')
-            ).map(input => input.value);
-
-            // Obtener imagen principal
-            const mainImage = document.querySelector('input[name="main_image"]:checked')?.value || selectedImages[0];
-
-            let agentData = null;
-            const agentSelectValue = document.getElementById('agent_select').value;
-
-            if (agentSelectValue === 'new') {
-                agentData = {
-                    name: document.getElementById('new_agent_name').value,
-                    phone: document.getElementById('new_agent_phone').value,
-                    email: document.getElementById('new_agent_email').value,
-                    website: document.getElementById('new_agent_website').value
-                };
-            } else if (agentSelectValue) {
-                agentData = agents.find(a => a.id === parseInt(agentSelectValue));
-            }
-
-            const formData = {
-                title: document.getElementById('title').value,
-                price: document.getElementById('price').value,
-                location: document.getElementById('location').value,
-                url: document.getElementById('url').value,
-                description: document.getElementById('description').value,
-                notes: document.getElementById('notes').value,
-                images: selectedImages,
-                main_image: mainImage,
-                
-                // Dimensiones
-                lot_size: parseFloat(document.getElementById('lot_size').value) || null,
-                construction_size: parseFloat(document.getElementById('construction_size').value) || null,
-                
-                // Características numéricas
-                bathrooms: parseFloat(document.getElementById('bathrooms').value) || null,
-                bedrooms: parseInt(document.getElementById('bedrooms').value) || null,
-                parking_spaces: parseInt(document.getElementById('parking_spaces').value) || null,
-                floors: parseInt(document.getElementById('floors').value) || null,
-                
-                // Información del agente
-                agent: agentData
-            };
-
-            console.log("Datos a enviar:", formData);
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/properties`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log("Propiedad guardada:", result);
-                    alert('Propiedad guardada exitosamente');
-                    popup.remove();
-                } else {
-                    const errorText = await response.text();
-                    console.error("Error response:", response.status, errorText);
-                    alert(`Error al guardar la propiedad: ${response.status} - ${errorText}`);
-                }
-            } catch (error) {
-                console.error("Error de conexión:", error);
-                alert('Error de conexión. Por favor, intenta de nuevo más tarde.');
-            }
-        });
     }
 
     function debugLog(message, data = null) {
