@@ -702,14 +702,8 @@
             
             // Verificar URL
             const currentURL = window.location.href;
-            console.log("📍 URL actual:", currentURL);
             
-            // Detectar imágenes
-            console.log("🔍 Detectando imágenes...");
-            const images = await detectImages();
-            console.log("📸 Imágenes encontradas:", images);
-            
-            // Crear popup básico para pruebas
+            // Crear popup con opción manual
             const popup = document.createElement('div');
             popup.style.position = 'fixed';
             popup.style.top = '20px';
@@ -719,10 +713,28 @@
             popup.style.border = '1px solid black';
             popup.style.zIndex = '9999';
             popup.innerHTML = `
-                <h3>Imágenes Detectadas: ${images.length}</h3>
-                <button onclick="this.parentElement.remove()">Cerrar</button>
+                <h3>Selección de Imágenes</h3>
+                <p>Elija el método de selección:</p>
+                <button onclick="startManualSelection()">Selección Manual</button>
+                <button onclick="startAutoSelection()">Detección Automática</button>
+                <button onclick="this.parentElement.remove()">Cancelar</button>
             `;
             document.body.appendChild(popup);
+            
+            // Hacer las funciones disponibles
+            window.startManualSelection = async function() {
+                popup.remove();
+                alert('Haga clic en las imágenes que desea seleccionar. Las imágenes seleccionadas tendrán un borde rojo.');
+                const selectedImages = manualImageSelection();
+                // Continuar con el proceso normal usando las imágenes seleccionadas
+                showPropertyForm(selectedImages);
+            };
+            
+            window.startAutoSelection = async function() {
+                popup.remove();
+                const images = await detectImages();
+                showPropertyForm(images);
+            };
             
         } catch (error) {
             console.error("❌ Error en createPopup:", error);
