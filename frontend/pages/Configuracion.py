@@ -64,6 +64,9 @@ def main():
     # Código del bookmarklet con codificación explícita
     bookmarklet_code = generate_bookmarklet()
     
+    # Generar el href para el bookmarklet
+    bookmarklet_href = f"javascript:{urllib.parse.quote(bookmarklet_code)}"
+    
     # Mostrar el código completo para copiar
     st.code(bookmarklet_code, language="javascript")
     
