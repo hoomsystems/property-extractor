@@ -2,39 +2,26 @@ import streamlit as st
 import urllib.parse
 
 def generate_bookmarklet():
+    # Minificar y asegurar que el código esté bien formado
     return """javascript:(function(){
-        console.log('Iniciando bookmarklet');
         var s=document.createElement('script');
         s.src='https://hoomextractor.online/static/collector.js';
         s.onload=function(){
-            // Esperar un momento para asegurarnos que las funciones estén disponibles
-            setTimeout(function() {
-                // Verificar que todas las funciones necesarias estén disponibles
-                if(!window.manualImageSelection || !window.detectImages || !window.showPropertyForm || !window.startAutomatic || !window.startManual){
-                    console.error('Funciones no encontradas:', {
-                        manualImageSelection: !!window.manualImageSelection,
-                        detectImages: !!window.detectImages,
-                        showPropertyForm: !!window.showPropertyForm,
-                        startAutomatic: !!window.startAutomatic,
-                        startManual: !!window.startManual
-                    });
+            setTimeout(function(){
+                if(!window.manualImageSelection||!window.detectImages||!window.showPropertyForm||!window.startAutomatic||!window.startManual){
+                    console.error('Funciones no encontradas:',{manualImageSelection:!!window.manualImageSelection,detectImages:!!window.detectImages,showPropertyForm:!!window.showPropertyForm,startAutomatic:!!window.startAutomatic,startManual:!!window.startManual});
                     alert('Error: No se pudo cargar el script correctamente');
                     return;
                 }
-
-                // Crear el popup inicial
                 var d=document.createElement('div');
                 d.style.cssText='position:fixed;top:20px;right:20px;background:white;padding:20px;border:1px solid #ccc;border-radius:8px;z-index:9999;box-shadow:0 2px 10px rgba(0,0,0,0.2);font-family:Arial,sans-serif';
                 var b='display:block;width:100%;margin:8px 0;padding:10px;border:none;border-radius:4px;font-size:14px;cursor:pointer;color:white';
-                d.innerHTML='<h3 style="margin:0 0 15px 0;font-size:16px">Seleccionar Imágenes</h3>'+
-                    '<button onclick="window.startAutomatic();this.parentElement.remove()" style="'+b+';background:#4CAF50">Detección Automática</button>'+
-                    '<button onclick="window.startManual();this.parentElement.remove()" style="'+b+';background:#2196F3">Selección Manual</button>'+
-                    '<button onclick="this.parentElement.remove()" style="'+b+';background:#f44336">Cancelar</button>';
+                d.innerHTML='<h3 style="margin:0 0 15px 0;font-size:16px">Seleccionar Imágenes</h3><button onclick="window.startAutomatic();this.parentElement.remove()" style="'+b+';background:#4CAF50">Detección Automática</button><button onclick="window.startManual();this.parentElement.remove()" style="'+b+';background:#2196F3">Selección Manual</button><button onclick="this.parentElement.remove()" style="'+b+';background:#f44336">Cancelar</button>';
                 document.body.appendChild(d);
-            }, 500); // Esperar 500ms para asegurarnos que todo esté cargado
+            },500);
         };
         s.onerror=function(e){
-            console.error('Error cargando script:', e);
+            console.error('Error cargando script:',e);
             alert('Error cargando el script. Por favor intente de nuevo.');
         };
         document.body.appendChild(s);
@@ -58,11 +45,11 @@ def main():
         directamente desde cualquier sitio web inmobiliario.
     """)
     
-    # Código del bookmarklet con codificación explícita
+    # Código del bookmarklet
     bookmarklet_code = generate_bookmarklet()
     
-    # Generar el href para el bookmarklet
-    bookmarklet_href = bookmarklet_code
+    # Generar el href para el bookmarklet (sin espacios ni saltos de línea)
+    bookmarklet_href = bookmarklet_code.strip().replace('\n', '').replace('    ', '')
     
     # Mostrar el código completo para copiar
     st.code(bookmarklet_code, language="javascript")
