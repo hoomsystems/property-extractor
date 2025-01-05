@@ -3,41 +3,22 @@ import urllib.parse
 
 def generate_bookmarklet():
     return """javascript:(function(){
+        console.log('Iniciando bookmarklet');
         var script = document.createElement('script');
         script.src = 'https://hoomextractor.online/static/collector.js';
-        
-        // Esperar a que el script se cargue completamente
         script.onload = function() {
-            // Verificar que las funciones necesarias estén disponibles
+            console.log('Script cargado');
             if (typeof window.createPopup === 'undefined') {
-                alert('Error: No se pudo cargar el script correctamente');
+                console.error('createPopup no está definido');
+                alert('Error: createPopup no está definido');
                 return;
             }
-
-            try {
-                // Definir las funciones de manejo
-                window.startManualSelection = async function() {
-                    const selectedImages = window.manualImageSelection();
-                    window.showPropertyForm(selectedImages);
-                };
-                
-                window.startAutoSelection = async function() {
-                    const images = await window.detectImages();
-                    window.showPropertyForm(images);
-                };
-
-                // Mostrar el popup inicial
-                window.createPopup();
-            } catch(e) {
-                console.error('Error:', e);
-                alert('Error: ' + e.message);
-            }
+            window.createPopup();
         };
-
-        script.onerror = function() {
-            alert('Error: No se pudo cargar el script');
+        script.onerror = function(e) {
+            console.error('Error cargando script:', e);
+            alert('Error cargando script');
         };
-
         document.body.appendChild(script);
     })();"""
 

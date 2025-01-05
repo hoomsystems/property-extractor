@@ -1,4 +1,6 @@
 (function() {
+    console.log("Iniciando collector.js");
+    
     // Actualizar todas las URLs del backend
     const BACKEND_URL = 'https://hoomextractor.online/api';
 
@@ -732,23 +734,11 @@
     }
 
     // Hacer todas las funciones necesarias disponibles globalmente
+    console.log("Exponiendo funciones globalmente");
     window.createPopup = createPopup;
     window.manualImageSelection = manualImageSelection;
-    window.startManualSelection = async function() {
-        const selectedImages = manualImageSelection();
-        showPropertyForm(selectedImages);
-    };
-    window.startAutoSelection = async function() {
-        const images = await detectImages();
-        showPropertyForm(images);
-    };
-    window.showPropertyForm = async function(images) {
-        const detectedInfo = detectInmuebles24Info();
-        const description = detectDescription();
-        // ... resto del código del formulario
-    };
+    window.detectImages = detectImages;
+    window.showPropertyForm = showPropertyForm;
 
-    // No ejecutar createPopup automáticamente
-    // Dejar que el bookmarklet lo haga
-    console.log("Collector.js cargado correctamente");
+    console.log("Collector.js cargado completamente");
 })(); 
