@@ -8,60 +8,72 @@
             images: function() {
                 debugLog("🔍 Iniciando detección de imágenes en inmuebles24.com");
                 const images = new Set();
-
-                // 1. Buscar en la galería principal
-                debugLog("Buscando en galería principal...");
-                document.querySelectorAll('.gallery-content img, .re-DetailHeader img').forEach(img => {
-                    debugLog("Elemento de imagen encontrado:", img);
-                    const sources = this.getImageSources(img);
-                    sources.forEach(src => images.add(src));
-                });
-
-                // 2. Buscar en el estado inicial de la página
-                debugLog("Buscando en scripts...");
-                document.querySelectorAll('script').forEach(script => {
-                    if (script.textContent.includes('__INITIAL_STATE__')) {
-                        debugLog("Script con estado inicial encontrado");
-                        this.extractImagesFromScript(script, images);
-                    }
-                });
-
-                const result = Array.from(images).filter(url => isValidImageUrl(url));
-                debugLog(`✅ Detección completada. Encontradas ${result.length} imágenes:`, result);
-                return result;
-            },
-
-            getImageSources: function(img) {
-                const sources = new Set();
-                const attrs = ['src', 'data-src', 'data-lazy', 'data-original', 'data-full'];
                 
-                attrs.forEach(attr => {
-                    const value = img.getAttribute(attr);
-                    if (value && isValidImageUrl(value)) {
-                        debugLog(`Imagen encontrada en ${attr}:`, value);
-                        sources.add(value);
-                    }
-                });
+                // Selectores específicos de inmuebles24 incluyendo carruseles
+                const selectors = [
+                    '[data-qa="POSTING_CARD_GALLERY"] img',
+                    '[class*="Gallery"] img',
+                    '[class*="PostingCard"] img',
+                    '.posting-gallery img',
+                    '.gallery-box img',
+                    // Carruseles específicos de inmuebles24
+                    '[class*="carousel"] img',
+                    '[class*="slider"] img',
+                    '[class*="Swiper"] img',
+                    // Atributos de datos comunes en inmuebles24
+                    'img[data-src]',
+                    'img[data-lazy]',
+                    'img[data-full]'
+                ];
 
-                return sources;
-            },
+                // Buscar en selectores específicos
+                selectors.forEach(selector => {
+                    debugLog(`Buscando imágenes con selector: ${selector}`);
+                    document.querySelectorAll(selector).forEach(img => {
+                        const src = img.getAttribute('src');
+                        // Buscar en múltiples atributos de datos
+                        const dataSources = [
+                            img.getAttribute('data-original'),
+                            img.getAttribute('data-lazy'),
+                            img.getAttribute('data-src'),
+                            img.getAttribute('data-full'),
+                            img.getAttribute('data-zoom'),
+                            img.getAttribute('data-high-res'),
+                            src
+                        ].filter(Boolean); // Eliminar valores null/undefined
 
-            extractImagesFromScript: function(script, images) {
-                try {
-                    const content = script.textContent;
-                    const matches = content.match(/"(https?:\/\/[^"]+\.(?:jpg|jpeg|png|gif|webp))"/gi);
-                    if (matches) {
-                        matches.forEach(url => {
-                            const cleanUrl = url.replace(/['"]/g, '');
-                            if (isValidImageUrl(cleanUrl)) {
-                                debugLog("Imagen encontrada en script:", cleanUrl);
-                                images.add(cleanUrl);
+                        // Agregar todas las fuentes válidas
+                        dataSources.forEach(source => {
+                            if (source && !isThumbnail(source)) {
+                                debugLog(`Imagen encontrada: ${source}`);
+                                images.add(source);
                             }
                         });
+                    });
+                });
+
+                // Buscar en scripts (para carruseles dinámicos)
+                document.querySelectorAll('script').forEach(script => {
+                    try {
+                        const content = script.textContent;
+                        const jsonMatch = content.match(/window\.__INITIAL_STATE__\s*=\s*({.*?});/);
+                        if (jsonMatch) {
+                            const data = JSON.parse(jsonMatch[1]);
+                            // Buscar URLs de imágenes en el estado inicial
+                            JSON.stringify(data).match(/"(https?:\/\/[^"]+\.(?:jpg|jpeg|png|gif|webp))"/gi)
+                                ?.forEach(url => {
+                                    const cleanUrl = url.replace(/['"]/g, '');
+                                    if (!isThumbnail(cleanUrl)) {
+                                        images.add(cleanUrl);
+                                    }
+                                });
+                        }
+                    } catch (e) {
+                        debugLog("Error parsing script:", e);
                     }
-                } catch (e) {
-                    debugLog("Error extrayendo imágenes del script:", e);
-                }
+                });
+
+                return processImages(images);
             }
         },
         
@@ -959,6 +971,23 @@
         } catch (e) {
             return false;
         }
+    }
+
+    function manualImageSelection() {
+        const images = new Set();
+        document.querySelectorAll('img').forEach(img => {
+            img.style.cursor = 'pointer';
+            img.onclick = function() {
+                if (this.style.border === '2px solid red') {
+                    this.style.border = '';
+                    images.delete(this.src);
+                } else {
+                    this.style.border = '2px solid red';
+                    images.add(this.src);
+                }
+            }
+        });
+        return Array.from(images);
     }
 
     // Hacer las funciones disponibles globalmente
