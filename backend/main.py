@@ -1,90 +1,13 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-from backend.models import Base, RealEstateAgent, Property
-from backend.database import engine
-import backend.routes as routes
-import os
 
-# Eliminar la base de datos si existe (solo durante desarrollo)
-#if os.path.exists("properties.db"):
-#    os.remove("properties.db")
+app = FastAPI()
 
-# Crear todas las tablas
-print("Creando tablas en la base de datos...")
-Base.metadata.create_all(bind=engine)
-print("Tablas creadas exitosamente")
-
-app = FastAPI(title="Property Collector API")
-
-# Configurar CORS de manera más permisiva
+# Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_origins=["*"],  # Permitir todos los orígenes
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
-)
-
-# Middleware para manejar errores CORS
-@app.middleware("http")
-async def add_cors_headers(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "POST, GET, DELETE, PUT, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    return response
-
-# Manejador de errores
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return JSONResponse(
-        status_code=500,
-        content={"detail": str(exc)},
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, GET, DELETE, PUT, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type"
-        }
-    )
-
-# Asegurarnos de que el directorio static existe
-os.makedirs("static", exist_ok=True)
-os.makedirs("static/uploads", exist_ok=True)
-
-# Ruta para verificar que collector.js es accesible
-@app.get("/test-collector")  # Ya no necesita /api/ porque el router lo maneja
-async def test_collector():
-    return FileResponse("static/collector.js")
-
-# Ruta OPTIONS para preflight requests
-@app.options("/{path:path}")
-async def options_handler(request: Request):
-    return JSONResponse(
-        content={},
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, GET, DELETE, PUT, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type"
-        }
-    )
-
-@app.get("/static/collector.js")
-async def serve_collector():
-    return FileResponse(
-        "static/collector.js",
-        media_type="application/javascript",
-        headers={
-            "Content-Type": "application/javascript; charset=UTF-8",
-            "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "X-Content-Type-Options": "nosniff"
-        }
-    )
-
-# Incluir las rutas del router
-app.include_router(routes.router, prefix="/api")
-
-# Después de esta ruta, montar los estáticos
-app.mount("/static", StaticFiles(directory="static"), name="static") 
+) 
