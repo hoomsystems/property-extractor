@@ -1,28 +1,16 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional, List, Dict
+from .scraper import PropertyScraper
 
 router = APIRouter()
+scraper = PropertyScraper()
 
-class Agent(BaseModel):
-    name: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[str] = None
-
-class Property(BaseModel):
-    url: str
-    title: str
-    location: str
-    description: str
-    rooms: Optional[int] = None
-    bathrooms: Optional[float] = None
-    construction: Optional[float] = None
-    land: Optional[float] = None
-
-@router.post("/properties")
-async def create_property(property: Property):
+@router.get("/scrape")
+async def scrape_property(url: str):
     try:
-        # Aquí iría la lógica para guardar en la base de datos
-        return {"status": "success", "message": "Propiedad guardada exitosamente"}
+        data = scraper.scrape(url)
+        return {
+            "status": "success",
+            "data": data
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
