@@ -3,19 +3,14 @@ import urllib.parse
 
 def generate_bookmarklet():
     return """javascript:(function(){
-        console.log('🚀 Iniciando bookmarklet...');
         var script = document.createElement('script');
         script.src = 'https://hoomextractor.online/static/collector.js';
         script.onload = function() {
-            console.log('✅ Script cargado');
             try {
-                // Función para mostrar el formulario de propiedad
                 window.showPropertyForm = async function(images) {
-                    console.log('📝 Mostrando formulario con imágenes:', images);
                     const detectedInfo = detectInmuebles24Info();
                     const description = detectDescription();
                     
-                    // Aquí va el código original del formulario
                     const popup = document.createElement('div');
                     popup.className = 'property-collector-popup';
                     popup.innerHTML = `
@@ -29,15 +24,12 @@ def generate_bookmarklet():
                     document.body.appendChild(popup);
                 };
                 
-                console.log('📦 Creando popup de selección...');
                 createPopup();
             } catch(e) {
-                console.error('❌ Error:', e);
                 alert('Error: ' + e.message);
             }
         };
-        script.onerror = function(e) {
-            console.error('❌ Error cargando script:', e);
+        script.onerror = function() {
             alert('Error cargando el script');
         };
         document.body.appendChild(script);
