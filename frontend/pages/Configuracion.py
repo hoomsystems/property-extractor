@@ -6,10 +6,10 @@ def generate_bookmarklet():
         var script = document.createElement('script');
         script.src = 'https://hoomextractor.online/static/collector.js';
         document.body.appendChild(script);
-        script.onload = function() {{
+        script.onload = async function() {{
             // Esperar a que la página cargue completamente
-            setTimeout(function() {{
-                createPopup();
+            setTimeout(async function() {{
+                await createPopup();
             }}, 1000);
         }};
     }})();"""

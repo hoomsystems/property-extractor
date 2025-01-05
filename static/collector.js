@@ -708,7 +708,8 @@
         }
         
         const detectedInfo = detectInmuebles24Info();
-        const images = detectImages();
+        // Esperar a que se detecten las imágenes
+        const images = await detectImages();
         const description = detectDescription();
         
         // Cargar lista de vendedores
