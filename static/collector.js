@@ -685,39 +685,71 @@
     }
 
     function manualImageSelection() {
+        console.log("Iniciando selección manual");
         const images = new Set();
         
         // Crear barra de herramientas
         const toolbar = document.createElement('div');
         toolbar.style.cssText = `
             position: fixed;
-            top: 10px;
-            right: 10px;
+            top: 20px;
+            right: 20px;
             background: white;
-            padding: 10px;
-            border: 1px solid black;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
             z-index: 10000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-family: Arial, sans-serif;
+            min-width: 250px;
         `;
+        
         toolbar.innerHTML = `
-            <p>Haga clic en las imágenes para seleccionarlas</p>
-            <div>Imágenes seleccionadas: <span id="selectedCount">0</span></div>
-            <button onclick="window.finishSelection()">Finalizar Selección</button>
+            <div style="margin-bottom: 15px; font-size: 14px;">
+                <p style="margin: 0 0 10px 0;">Haga clic en las imágenes para seleccionarlas</p>
+                <div style="background: #f5f5f5; padding: 8px; border-radius: 4px;">
+                    Imágenes seleccionadas: <span id="selectedCount" style="font-weight: bold;">0</span>
+                </div>
+            </div>
+            <button onclick="window.finishSelection()" 
+                    style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; 
+                           border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+                           transition: background-color 0.2s;">
+                Finalizar Selección
+            </button>
         `;
+        
         document.body.appendChild(toolbar);
 
         // Hacer todas las imágenes seleccionables
         document.querySelectorAll('img').forEach(img => {
-            if (img.width > 100 && img.height > 100) { // Solo imágenes grandes
+            if (img.width > 100 && img.height > 100) {
                 img.style.cursor = 'pointer';
+                img.style.transition = 'all 0.2s';
+                
+                // Agregar hover effect
+                img.addEventListener('mouseover', function() {
+                    if (this.style.border !== '2px solid red') {
+                        this.style.boxShadow = '0 0 5px rgba(0,0,0,0.3)';
+                    }
+                });
+                
+                img.addEventListener('mouseout', function() {
+                    if (this.style.border !== '2px solid red') {
+                        this.style.boxShadow = 'none';
+                    }
+                });
+                
                 img.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     if (this.style.border === '2px solid red') {
                         this.style.border = '';
+                        this.style.boxShadow = 'none';
                         images.delete(this.src);
                     } else {
                         this.style.border = '2px solid red';
+                        this.style.boxShadow = '0 0 8px rgba(255,0,0,0.3)';
                         images.add(this.src);
                     }
                     document.getElementById('selectedCount').textContent = images.size;
@@ -727,24 +759,30 @@
 
         // Función para finalizar selección
         window.finishSelection = function() {
+            console.log("Finalizando selección");
+            const selectedImages = Array.from(images);
+            console.log("Imágenes seleccionadas:", selectedImages);
+            
+            if (selectedImages.length === 0) {
+                alert('Por favor seleccione al menos una imagen');
+                return;
+            }
+            
+            // Limpiar la interfaz de selección
             toolbar.remove();
             document.querySelectorAll('img').forEach(img => {
                 img.style.border = '';
                 img.style.cursor = '';
                 img.onclick = null;
             });
-            const selectedImages = Array.from(images);
-            if (selectedImages.length === 0) {
-                alert('Por favor seleccione al menos una imagen');
-                return;
-            }
+            
+            // Mostrar el formulario
             showPropertyForm(selectedImages);
         };
     }
 
     function showPropertyForm(images) {
-        console.log("Mostrando formulario con imágenes:", images);
-        
+        console.log("Mostrando formulario para imágenes:", images);
         const formPopup = document.createElement('div');
         formPopup.style.cssText = `
             position: fixed;
@@ -757,43 +795,46 @@
             z-index: 10000;
             max-height: 90vh;
             overflow-y: auto;
-            min-width: 300px;
+            min-width: 500px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         `;
 
         // Detectar información automáticamente
-        const price = detectPrice();
-        const location = detectLocation();
-        const description = detectDescription();
+        const price = detectPrice() || '';
+        const location = detectLocation() || '';
+        const description = detectDescription() || '';
         const features = detectGeneralFeatures();
 
         formPopup.innerHTML = `
-            <h3>Guardar Propiedad</h3>
-            <form id="propertyForm">
+            <h3 style="margin-bottom: 20px;">Guardar Propiedad</h3>
+            <form id="propertyForm" style="display: flex; flex-direction: column; gap: 15px;">
                 <div>
                     <label>Precio:</label>
-                    <input type="text" name="price" value="${price || ''}" required>
+                    <input type="text" name="price" value="${price}" required style="width: 100%; padding: 5px;">
                 </div>
                 <div>
                     <label>Ubicación:</label>
-                    <input type="text" name="location" value="${location || ''}" required>
+                    <input type="text" name="location" value="${location}" required style="width: 100%; padding: 5px;">
                 </div>
                 <div>
                     <label>Descripción:</label>
-                    <textarea name="description" required>${description || ''}</textarea>
+                    <textarea name="description" required style="width: 100%; height: 100px; padding: 5px;">${description}</textarea>
                 </div>
                 <div>
                     <label>Imágenes seleccionadas (${images.length}):</label>
-                    <div style="max-height: 200px; overflow-y: auto;">
+                    <div style="max-height: 200px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
                         ${images.map(img => `
-                            <img src="${img}" style="max-width: 100px; margin: 5px;">
+                            <img src="${img}" style="max-width: 100px; height: auto; border: 1px solid #ccc;">
                         `).join('')}
                     </div>
                 </div>
-                <button type="submit">Guardar Propiedad</button>
-                <button type="button" onclick="this.parentElement.parentElement.remove()">Cancelar</button>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" style="padding: 10px 20px;">Guardar Propiedad</button>
+                    <button type="button" onclick="this.closest('.property-form').remove()" style="padding: 10px 20px;">Cancelar</button>
+                </div>
             </form>
         `;
-
+        formPopup.className = 'property-form';
         document.body.appendChild(formPopup);
 
         // Manejar el envío del formulario

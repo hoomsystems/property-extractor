@@ -3,10 +3,57 @@ import urllib.parse
 
 def generate_bookmarklet():
     return """javascript:(function(){
+        console.log('Iniciando bookmarklet');
         var script = document.createElement('script');
         script.src = 'https://hoomextractor.online/static/collector.js';
         script.onload = function() {
+            console.log('Script cargado');
+            
+            // Verificar que las funciones necesarias estén disponibles
+            if (!window.manualImageSelection || !window.showPropertyForm) {
+                console.error('Funciones necesarias no encontradas');
+                alert('Error: No se pudieron cargar las funciones necesarias');
+                return;
+            }
+            
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 20px;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                z-index: 9999;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                font-family: Arial, sans-serif;
+            `;
+            
+            const buttonStyle = `
+                display: block;
+                width: 100%;
+                margin: 8px 0;
+                padding: 10px;
+                border: none;
+                border-radius: 4px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            `;
+            
+            popup.innerHTML = `
+                <h3 style="margin: 0 0 15px 0; font-size: 16px;">Seleccionar Imágenes</h3>
+                <button onclick="window.startAutomatic()" style="${buttonStyle} background-color: #4CAF50; color: white;">Detección Automática</button>
+                <button onclick="window.startManual()" style="${buttonStyle} background-color: #2196F3; color: white;">Selección Manual</button>
+                <button onclick="this.parentElement.remove()" style="${buttonStyle} background-color: #f44336; color: white;">Cancelar</button>
+            `;
+            
+            document.body.appendChild(popup);
+            
             window.startAutomatic = function() {
+                popup.remove();
+                console.log('Iniciando detección automática');
                 const images = window.detectImages();
                 if (images && images.length > 0) {
                     window.showPropertyForm(images);
@@ -16,14 +63,17 @@ def generate_bookmarklet():
             };
             
             window.startManual = function() {
+                popup.remove();
+                console.log('Iniciando selección manual');
                 window.manualImageSelection();
             };
-            
-            const popup = document.createElement('div');
-            popup.style.cssText = 'position:fixed;top:20px;right:20px;background:white;padding:20px;border:1px solid black;z-index:9999;box-shadow:0 2px 5px rgba(0,0,0,0.2);';
-            popup.innerHTML = '<h3>Seleccionar Imágenes</h3><button onclick="window.startAutomatic()">Detección Automática</button><button onclick="window.startManual()">Selección Manual</button><button onclick="this.parentElement.remove()">Cancelar</button>';
-            document.body.appendChild(popup);
         };
+        
+        script.onerror = function(e) {
+            console.error('Error cargando script:', e);
+            alert('Error cargando el script');
+        };
+        
         document.body.appendChild(script);
     })();"""
 
