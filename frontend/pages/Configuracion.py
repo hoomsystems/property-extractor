@@ -7,30 +7,22 @@ def generate_bookmarklet():
         script.src = 'https://hoomextractor.online/static/collector.js';
         script.onload = function() {
             try {
-                window.showPropertyForm = async function(images) {
-                    const detectedInfo = detectInmuebles24Info();
-                    const description = detectDescription();
-                    
-                    const popup = document.createElement('div');
-                    popup.className = 'property-collector-popup';
-                    popup.innerHTML = `
-                        <div class="popup-content">
-                            <h3>Guardar Propiedad</h3>
-                            <form>
-                                <!-- ... resto del formulario ... -->
-                            </form>
-                        </div>
-                    `;
-                    document.body.appendChild(popup);
+                // Definir funciones de selección en el scope global
+                window.startManualSelection = async function() {
+                    const selectedImages = manualImageSelection();
+                    showPropertyForm(selectedImages);
                 };
                 
+                window.startAutoSelection = async function() {
+                    const images = await detectImages();
+                    showPropertyForm(images);
+                };
+                
+                // Iniciar el proceso
                 createPopup();
             } catch(e) {
                 alert('Error: ' + e.message);
             }
-        };
-        script.onerror = function() {
-            alert('Error cargando el script');
         };
         document.body.appendChild(script);
     })();"""
