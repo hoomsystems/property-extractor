@@ -685,11 +685,20 @@
 
     async function createPopup() {
         const popup = document.createElement('div');
+        popup.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border: 1px solid black;
+            z-index: 9999;
+        `;
         popup.innerHTML = `
             <h3>Selección de Imágenes</h3>
             <p>Elija el método de selección:</p>
-            <button onclick="startManualSelection()">Selección Manual</button>
-            <button onclick="startAutoSelection()">Detección Automática</button>
+            <button onclick="window.startManualSelection()">Selección Manual</button>
+            <button onclick="window.startAutoSelection()">Detección Automática</button>
             <button onclick="this.parentElement.remove()">Cancelar</button>
         `;
         document.body.appendChild(popup);
@@ -722,14 +731,23 @@
         document.body.appendChild(selectionBar);
     }
 
-    // Hacer las funciones disponibles globalmente
-    window.detectImages = detectImages;
+    // Hacer todas las funciones necesarias disponibles globalmente
     window.createPopup = createPopup;
-    window.detectPrice = detectPrice;
-    window.detectLocation = detectLocation;
-    window.detectFeatures = detectFeatures;
-    window.detectGeneralFeatures = detectGeneralFeatures;
-    
+    window.manualImageSelection = manualImageSelection;
+    window.startManualSelection = async function() {
+        const selectedImages = manualImageSelection();
+        showPropertyForm(selectedImages);
+    };
+    window.startAutoSelection = async function() {
+        const images = await detectImages();
+        showPropertyForm(images);
+    };
+    window.showPropertyForm = async function(images) {
+        const detectedInfo = detectInmuebles24Info();
+        const description = detectDescription();
+        // ... resto del código del formulario
+    };
+
     // No ejecutar createPopup automáticamente
     // Dejar que el bookmarklet lo haga
     console.log("Collector.js cargado correctamente");
