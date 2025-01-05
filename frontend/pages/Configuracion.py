@@ -23,113 +23,39 @@ def minify_js(code):
 
 def generate_bookmarklet():
     return """javascript:(function(){
-        // Función para extraer texto limpio
-        function getText(selector) {
-            var el = document.querySelector(selector);
-            return el ? el.textContent.trim() : '';
-        }
-        
-        // Función para extraer números de un texto
-        function getNumber(text) {
-            var match = text.match(/\\d+(\\.\\d+)?/);
-            return match ? match[0] : '';
-        }
-        
-        // Detectar datos básicos
-        var data = {
-            title: document.title,
-            description: getText('meta[name="description"]') || getText('[class*="description"],[class*="Description"]'),
-            rooms: getNumber(getText('[class*="room"],[class*="Room"],[class*="recamara"],[class*="Recamara"]')),
-            bathrooms: getNumber(getText('[class*="bath"],[class*="Bath"],[class*="baño"],[class*="Baño"]')),
-            construction: getNumber(getText('[class*="construction"],[class*="Construction"],[class*="construc"],[class*="Construc"]')),
-            land: getNumber(getText('[class*="land"],[class*="Land"],[class*="terreno"],[class*="Terreno"]')),
-            location: getText('[class*="location"],[class*="Location"],[class*="ubicacion"],[class*="Ubicacion"],[class*="address"],[class*="Address"]'),
-            url: window.location.href
-        };
-        
-        // Crear formulario
+        var url = window.location.href;
         var form = document.createElement('div');
-        form.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:9999;width:400px;font-family:Arial';
+        form.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:9999;width:300px;font-family:Arial';
         
         form.innerHTML = `
-            <h3 style="margin:0 0 15px">Guardar Propiedad</h3>
-            <form id="propertyForm">
-                <div style="margin-bottom:10px">
-                    <label>Título:</label>
-                    <input type="text" name="title" value="${data.title}" style="width:100%;padding:5px">
-                </div>
-                <div style="margin-bottom:10px">
-                    <label>Ubicación:</label>
-                    <input type="text" name="location" value="${data.location}" style="width:100%;padding:5px">
-                </div>
-                <div style="margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                    <div>
-                        <label>Recámaras:</label>
-                        <input type="number" name="rooms" value="${data.rooms}" style="width:100%;padding:5px">
-                    </div>
-                    <div>
-                        <label>Baños:</label>
-                        <input type="number" name="bathrooms" value="${data.bathrooms}" style="width:100%;padding:5px">
-                    </div>
-                </div>
-                <div style="margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                    <div>
-                        <label>M² Construcción:</label>
-                        <input type="number" name="construction" value="${data.construction}" style="width:100%;padding:5px">
-                    </div>
-                    <div>
-                        <label>M² Terreno:</label>
-                        <input type="number" name="land" value="${data.land}" style="width:100%;padding:5px">
-                    </div>
-                </div>
-                <div style="margin-bottom:10px">
-                    <label>Descripción:</label>
-                    <textarea name="description" style="width:100%;height:80px;padding:5px">${data.description}</textarea>
-                </div>
-                <div style="display:flex;gap:10px;justify-content:flex-end">
-                    <button type="submit" style="padding:8px 20px;background:#4CAF50;color:white;border:none;border-radius:4px;cursor:pointer">
-                        Guardar
-                    </button>
-                    <button type="button" onclick="this.closest('div').remove()" style="padding:8px 20px;background:#f44336;color:white;border:none;border-radius:4px;cursor:pointer">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
+            <h3 style="margin:0 0 15px">Extraer Propiedad</h3>
+            <p>¿Desea extraer la información de esta propiedad?</p>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+                <button onclick="window.extractProperty('${url}')" style="padding:8px 20px;background:#4CAF50;color:white;border:none;border-radius:4px;cursor:pointer">
+                    Extraer
+                </button>
+                <button onclick="this.closest('div').remove()" style="padding:8px 20px;background:#f44336;color:white;border:none;border-radius:4px;cursor:pointer">
+                    Cancelar
+                </button>
+            </div>
         `;
         
-        document.body.appendChild(form);
-        
-        document.getElementById('propertyForm').onsubmit = function(e) {
-            e.preventDefault();
-            var formData = new FormData(e.target);
-            var data = {
-                title: formData.get('title'),
-                location: formData.get('location'),
-                rooms: formData.get('rooms'),
-                bathrooms: formData.get('bathrooms'),
-                construction: formData.get('construction'),
-                land: formData.get('land'),
-                description: formData.get('description'),
-                url: window.location.href
-            };
-            
-            fetch('https://hoomextractor.online/api/properties', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            })
-            .then(function(r) {
-                if(r.ok) {
-                    alert('Propiedad guardada');
+        window.extractProperty = async function(url) {
+            try {
+                const response = await fetch('https://hoomextractor.online/api/scrape?url=' + encodeURIComponent(url));
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Información extraída exitosamente');
                     form.remove();
                 } else {
-                    throw new Error('Error al guardar');
+                    throw new Error('Error al extraer información');
                 }
-            })
-            .catch(function(e) {
-                alert('Error: ' + e.message);
-            });
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
         };
+        
+        document.body.appendChild(form);
     })();"""
 
 def main():
