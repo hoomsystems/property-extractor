@@ -10,6 +10,7 @@
     window.showPropertyForm = null;
     window.startAutomatic = null;
     window.startManual = null;
+    window.finishSelection = null;
 
     const siteDetectors = {
         // Detector para Inmuebles24
@@ -880,31 +881,51 @@
         };
     }
 
-    // Hacer todas las funciones necesarias disponibles globalmente
-    console.log("Exponiendo funciones globalmente");
-    window.createPopup = createPopup;
+    // Asegurarnos que las funciones se expongan correctamente
     window.manualImageSelection = manualImageSelection;
     window.detectImages = detectImages;
     window.showPropertyForm = showPropertyForm;
+    window.finishSelection = finishSelection;
+    
+    // Definir las funciones de inicio
     window.startAutomatic = function() {
         console.log("Iniciando detección automática");
-        const images = detectImages();
+        const images = window.detectImages();
         if (images && images.length > 0) {
-            showPropertyForm(images);
+            window.showPropertyForm(images);
         } else {
             alert('No se encontraron imágenes');
         }
     };
+
     window.startManual = function() {
         console.log("Iniciando selección manual");
-        manualImageSelection();
+        window.manualImageSelection();
     };
+
+    // Verificar que todas las funciones estén disponibles
+    const requiredFunctions = [
+        'detectImages',
+        'manualImageSelection',
+        'showPropertyForm',
+        'startAutomatic',
+        'startManual',
+        'finishSelection'
+    ];
+
+    const missingFunctions = requiredFunctions.filter(fn => !window[fn]);
+    if (missingFunctions.length > 0) {
+        console.error('Funciones faltantes:', missingFunctions);
+    } else {
+        console.log('Todas las funciones requeridas están disponibles');
+    }
 
     console.log("Collector.js cargado completamente. Funciones disponibles:", {
         detectImages: !!window.detectImages,
         manualImageSelection: !!window.manualImageSelection,
         showPropertyForm: !!window.showPropertyForm,
         startAutomatic: !!window.startAutomatic,
-        startManual: !!window.startManual
+        startManual: !!window.startManual,
+        finishSelection: !!window.finishSelection
     });
 })(); 
