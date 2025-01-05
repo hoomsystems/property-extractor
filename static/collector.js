@@ -9,71 +9,58 @@
                 debugLog("🔍 Iniciando detección de imágenes en inmuebles24.com");
                 const images = new Set();
                 
-                // Selectores específicos de inmuebles24 incluyendo carruseles
-                const selectors = [
-                    '[data-qa="POSTING_CARD_GALLERY"] img',
-                    '[class*="Gallery"] img',
-                    '[class*="PostingCard"] img',
-                    '.posting-gallery img',
-                    '.gallery-box img',
-                    // Carruseles específicos de inmuebles24
-                    '[class*="carousel"] img',
-                    '[class*="slider"] img',
-                    '[class*="Swiper"] img',
-                    // Atributos de datos comunes en inmuebles24
-                    'img[data-src]',
-                    'img[data-lazy]',
-                    'img[data-full]'
-                ];
+                // Esperar a que carguen las imágenes dinámicas
+                setTimeout(() => {
+                    // Selectores más específicos
+                    const selectors = [
+                        // Galería principal
+                        '[data-qa="POSTING_CARD_GALLERY"] img',
+                        '[class*="Gallery"] img',
+                        '[class*="gallery"] img',
+                        '[class*="PostingCard"] img',
+                        // Carrusel
+                        '[class*="carousel"] img',
+                        '[class*="slider"] img',
+                        '[class*="Swiper"] img',
+                        // Contenedores específicos
+                        '.posting-gallery img',
+                        '.gallery-box img',
+                        '.property-gallery img',
+                        // Atributos de datos
+                        'img[data-src]',
+                        'img[data-lazy]',
+                        'img[data-full]',
+                        'img[data-original]',
+                        // Selectores adicionales
+                        '[role="img"]',
+                        '[aria-label*="imagen"]',
+                        '[aria-label*="foto"]'
+                    ];
 
-                // Buscar en selectores específicos
-                selectors.forEach(selector => {
-                    debugLog(`Buscando imágenes con selector: ${selector}`);
-                    document.querySelectorAll(selector).forEach(img => {
-                        const src = img.getAttribute('src');
-                        // Buscar en múltiples atributos de datos
-                        const dataSources = [
-                            img.getAttribute('data-original'),
-                            img.getAttribute('data-lazy'),
-                            img.getAttribute('data-src'),
-                            img.getAttribute('data-full'),
-                            img.getAttribute('data-zoom'),
-                            img.getAttribute('data-high-res'),
-                            src
-                        ].filter(Boolean); // Eliminar valores null/undefined
+                    selectors.forEach(selector => {
+                        document.querySelectorAll(selector).forEach(img => {
+                            const sources = [
+                                img.src,
+                                img.dataset.src,
+                                img.dataset.lazy,
+                                img.dataset.full,
+                                img.dataset.original,
+                                img.currentSrc,
+                                img.getAttribute('src'),
+                                img.style.backgroundImage?.replace(/url\(['"]?(.*?)['"]?\)/i, '$1')
+                            ].filter(Boolean);
 
-                        // Agregar todas las fuentes válidas
-                        dataSources.forEach(source => {
-                            if (source && !isThumbnail(source)) {
-                                debugLog(`Imagen encontrada: ${source}`);
-                                images.add(source);
-                            }
+                            sources.forEach(src => {
+                                if (src && !isThumbnail(src)) {
+                                    debugLog(`Imagen encontrada: ${src}`);
+                                    images.add(src);
+                                }
+                            });
                         });
                     });
-                });
+                }, 2000); // Esperar 2 segundos
 
-                // Buscar en scripts (para carruseles dinámicos)
-                document.querySelectorAll('script').forEach(script => {
-                    try {
-                        const content = script.textContent;
-                        const jsonMatch = content.match(/window\.__INITIAL_STATE__\s*=\s*({.*?});/);
-                        if (jsonMatch) {
-                            const data = JSON.parse(jsonMatch[1]);
-                            // Buscar URLs de imágenes en el estado inicial
-                            JSON.stringify(data).match(/"(https?:\/\/[^"]+\.(?:jpg|jpeg|png|gif|webp))"/gi)
-                                ?.forEach(url => {
-                                    const cleanUrl = url.replace(/['"]/g, '');
-                                    if (!isThumbnail(cleanUrl)) {
-                                        images.add(cleanUrl);
-                                    }
-                                });
-                        }
-                    } catch (e) {
-                        debugLog("Error parsing script:", e);
-                    }
-                });
-
-                return processImages(images);
+                return Array.from(images);
             }
         },
         
@@ -762,6 +749,22 @@
 
     function manualImageSelection() {
         const images = new Set();
+        const selectionBar = document.createElement('div');
+        selectionBar.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid black;
+            z-index: 10000;
+        `;
+        selectionBar.innerHTML = `
+            <p>Haga clic en las imágenes que desea seleccionar</p>
+            <button onclick="window.finishImageSelection()">Finalizar Selección</button>
+        `;
+        document.body.appendChild(selectionBar);
+
         document.querySelectorAll('img').forEach(img => {
             img.style.cursor = 'pointer';
             img.onclick = function() {
@@ -774,7 +777,12 @@
                 }
             }
         });
-        return Array.from(images);
+
+        window.finishImageSelection = function() {
+            selectionBar.remove();
+            const selectedImages = Array.from(images);
+            showPropertyForm(selectedImages);
+        }
     }
 
     // Hacer las funciones disponibles globalmente
