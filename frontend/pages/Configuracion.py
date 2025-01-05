@@ -3,29 +3,43 @@ import urllib.parse
 
 def generate_bookmarklet():
     return """javascript:(function(){
+        console.log('Iniciando bookmarklet');
         var script = document.createElement('script');
         script.src = 'https://hoomextractor.online/static/collector.js';
         script.onload = function() {
+            console.log('Script cargado');
+            
+            // Definir las funciones de manejo
+            window.startAutomatic = function() {
+                const images = detectImages();
+                if (images && images.length > 0) {
+                    showPropertyForm(images);
+                } else {
+                    alert('No se encontraron imágenes');
+                }
+            };
+            
+            window.startManual = function() {
+                manualImageSelection();
+            };
+            
+            // Crear el popup inicial
             const popup = document.createElement('div');
-            popup.style.cssText = 'position:fixed;top:20px;right:20px;background:white;padding:20px;border:1px solid black;z-index:9999;';
+            popup.style.cssText = 'position:fixed;top:20px;right:20px;background:white;padding:20px;border:1px solid black;z-index:9999;box-shadow:0 2px 5px rgba(0,0,0,0.2);';
             popup.innerHTML = `
                 <h3>Seleccionar Imágenes</h3>
                 <button onclick="startAutomatic()">Detección Automática</button>
                 <button onclick="startManual()">Selección Manual</button>
+                <button onclick="this.parentElement.remove()">Cancelar</button>
             `;
             document.body.appendChild(popup);
-
-            window.startAutomatic = function() {
-                popup.remove();
-                const images = detectImages();
-                showPropertyForm(images);
-            };
-
-            window.startManual = function() {
-                popup.remove();
-                manualImageSelection();
-            };
         };
+        
+        script.onerror = function(e) {
+            console.error('Error cargando script:', e);
+            alert('Error cargando el script');
+        };
+        
         document.body.appendChild(script);
     })();"""
 
