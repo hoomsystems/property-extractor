@@ -2,12 +2,17 @@ import streamlit as st
 import urllib.parse
 
 def generate_bookmarklet():
-    # Minificar el código para evitar problemas
     return """javascript:(function(){
+        console.log('Iniciando bookmarklet');
         var s=document.createElement('script');
         s.src='https://hoomextractor.online/static/collector.js';
         s.onload=function(){
-            if(!window.manualImageSelection){
+            if(!window.manualImageSelection || !window.detectImages || !window.showPropertyForm){
+                console.error('Funciones no encontradas:', {
+                    manualImageSelection: !!window.manualImageSelection,
+                    detectImages: !!window.detectImages,
+                    showPropertyForm: !!window.showPropertyForm
+                });
                 alert('Error: No se pudo cargar el script correctamente');
                 return;
             }
@@ -19,8 +24,10 @@ def generate_bookmarklet():
                 '<button onclick="window.startManual()" style="'+b+';background:#2196F3">Selección Manual</button>'+
                 '<button onclick="this.parentElement.remove()" style="'+b+';background:#f44336">Cancelar</button>';
             document.body.appendChild(d);
-            window.startAutomatic=function(){d.remove();var i=window.detectImages();i&&i.length?window.showPropertyForm(i):alert('No se encontraron imágenes')};
-            window.startManual=function(){d.remove();window.manualImageSelection()};
+        };
+        s.onerror=function(e){
+            console.error('Error cargando script:', e);
+            alert('Error cargando el script. Por favor intente de nuevo.');
         };
         document.body.appendChild(s);
     })();"""
