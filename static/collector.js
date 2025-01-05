@@ -697,38 +697,139 @@
             padding: 10px;
             border: 1px solid black;
             z-index: 10000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         `;
         toolbar.innerHTML = `
             <p>Haga clic en las imágenes para seleccionarlas</p>
-            <button onclick="finishSelection()">Finalizar Selección</button>
+            <div>Imágenes seleccionadas: <span id="selectedCount">0</span></div>
+            <button onclick="window.finishSelection()">Finalizar Selección</button>
         `;
         document.body.appendChild(toolbar);
 
         // Hacer todas las imágenes seleccionables
         document.querySelectorAll('img').forEach(img => {
-            img.style.cursor = 'pointer';
-            img.onclick = function() {
-                if (this.style.border === '2px solid red') {
-                    this.style.border = '';
-                    images.delete(this.src);
-                } else {
-                    this.style.border = '2px solid red';
-                    images.add(this.src);
-                }
-            };
+            if (img.width > 100 && img.height > 100) { // Solo imágenes grandes
+                img.style.cursor = 'pointer';
+                img.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (this.style.border === '2px solid red') {
+                        this.style.border = '';
+                        images.delete(this.src);
+                    } else {
+                        this.style.border = '2px solid red';
+                        images.add(this.src);
+                    }
+                    document.getElementById('selectedCount').textContent = images.size;
+                };
+            }
         });
 
         // Función para finalizar selección
         window.finishSelection = function() {
             toolbar.remove();
+            document.querySelectorAll('img').forEach(img => {
+                img.style.border = '';
+                img.style.cursor = '';
+                img.onclick = null;
+            });
             const selectedImages = Array.from(images);
+            if (selectedImages.length === 0) {
+                alert('Por favor seleccione al menos una imagen');
+                return;
+            }
             showPropertyForm(selectedImages);
         };
     }
 
     function showPropertyForm(images) {
-        console.log("Imágenes seleccionadas:", images);
-        // Aquí va el código del formulario
+        console.log("Mostrando formulario con imágenes:", images);
+        
+        const formPopup = document.createElement('div');
+        formPopup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 1px solid black;
+            z-index: 10000;
+            max-height: 90vh;
+            overflow-y: auto;
+            min-width: 300px;
+        `;
+
+        // Detectar información automáticamente
+        const price = detectPrice();
+        const location = detectLocation();
+        const description = detectDescription();
+        const features = detectGeneralFeatures();
+
+        formPopup.innerHTML = `
+            <h3>Guardar Propiedad</h3>
+            <form id="propertyForm">
+                <div>
+                    <label>Precio:</label>
+                    <input type="text" name="price" value="${price || ''}" required>
+                </div>
+                <div>
+                    <label>Ubicación:</label>
+                    <input type="text" name="location" value="${location || ''}" required>
+                </div>
+                <div>
+                    <label>Descripción:</label>
+                    <textarea name="description" required>${description || ''}</textarea>
+                </div>
+                <div>
+                    <label>Imágenes seleccionadas (${images.length}):</label>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${images.map(img => `
+                            <img src="${img}" style="max-width: 100px; margin: 5px;">
+                        `).join('')}
+                    </div>
+                </div>
+                <button type="submit">Guardar Propiedad</button>
+                <button type="button" onclick="this.parentElement.parentElement.remove()">Cancelar</button>
+            </form>
+        `;
+
+        document.body.appendChild(formPopup);
+
+        // Manejar el envío del formulario
+        document.getElementById('propertyForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            const propertyData = {
+                price: formData.get('price'),
+                location: formData.get('location'),
+                description: formData.get('description'),
+                images: images,
+                features: features,
+                url: window.location.href
+            };
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/properties`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(propertyData)
+                });
+
+                if (response.ok) {
+                    alert('Propiedad guardada exitosamente');
+                    formPopup.remove();
+                } else {
+                    throw new Error('Error al guardar la propiedad');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar la propiedad: ' + error.message);
+            }
+        };
     }
 
     // Hacer todas las funciones necesarias disponibles globalmente
