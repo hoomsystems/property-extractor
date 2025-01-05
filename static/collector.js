@@ -1,9 +1,6 @@
 (function() {
     console.log("Iniciando collector.js");
     
-    // Actualizar todas las URLs del backend
-    const BACKEND_URL = 'https://hoomextractor.online/api';
-
     // Declarar las funciones que necesitamos exponer globalmente
     window.detectImages = null;
     window.manualImageSelection = null;
@@ -11,6 +8,9 @@
     window.startAutomatic = null;
     window.startManual = null;
     window.finishSelection = null;
+
+    // Actualizar todas las URLs del backend
+    const BACKEND_URL = 'https://hoomextractor.online/api';
 
     const siteDetectors = {
         // Detector para Inmuebles24
@@ -881,13 +881,12 @@
         };
     }
 
-    // Asegurarnos que las funciones se expongan correctamente
-    window.manualImageSelection = manualImageSelection;
+    // Asegurarnos que las funciones se expongan correctamente ANTES del mensaje de carga completa
     window.detectImages = detectImages;
+    window.manualImageSelection = manualImageSelection;
     window.showPropertyForm = showPropertyForm;
     window.finishSelection = finishSelection;
     
-    // Definir las funciones de inicio
     window.startAutomatic = function() {
         console.log("Iniciando detección automática");
         const images = window.detectImages();
@@ -916,10 +915,9 @@
     const missingFunctions = requiredFunctions.filter(fn => !window[fn]);
     if (missingFunctions.length > 0) {
         console.error('Funciones faltantes:', missingFunctions);
-    } else {
-        console.log('Todas las funciones requeridas están disponibles');
     }
 
+    // Mover este mensaje al final después de exponer todas las funciones
     console.log("Collector.js cargado completamente. Funciones disponibles:", {
         detectImages: !!window.detectImages,
         manualImageSelection: !!window.manualImageSelection,
