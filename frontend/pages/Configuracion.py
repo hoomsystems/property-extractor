@@ -9,7 +9,27 @@ def generate_bookmarklet():
         script.onload = function() {
             console.log('✅ Script cargado');
             try {
-                console.log('📦 Creando popup...');
+                // Función para mostrar el formulario de propiedad
+                window.showPropertyForm = async function(images) {
+                    console.log('📝 Mostrando formulario con imágenes:', images);
+                    const detectedInfo = detectInmuebles24Info();
+                    const description = detectDescription();
+                    
+                    // Aquí va el código original del formulario
+                    const popup = document.createElement('div');
+                    popup.className = 'property-collector-popup';
+                    popup.innerHTML = `
+                        <div class="popup-content">
+                            <h3>Guardar Propiedad</h3>
+                            <form>
+                                <!-- ... resto del formulario ... -->
+                            </form>
+                        </div>
+                    `;
+                    document.body.appendChild(popup);
+                };
+                
+                console.log('📦 Creando popup de selección...');
                 createPopup();
             } catch(e) {
                 console.error('❌ Error:', e);
