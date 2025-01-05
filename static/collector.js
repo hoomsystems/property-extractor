@@ -214,16 +214,36 @@
 
     // Uso
     function detectImages() {
-        debugLog("🚀 Iniciando detección de imágenes");
-        return new Promise((resolve) => {
-            // Esperar 2 segundos para que carguen las imágenes
-            setTimeout(() => {
-                const detector = detectSite();
-                const images = detector.images();
-                debugLog(`🎯 Detección finalizada. ${images.length} imágenes encontradas`);
-                resolve(images);
-            }, 2000);
+        console.log("Detectando imágenes...");
+        const images = new Set();
+        
+        // 1. Buscar todas las imágenes en la página
+        document.querySelectorAll('img').forEach(img => {
+            const src = img.src || img.dataset.src || img.dataset.lazy || img.getAttribute('src');
+            if (src && !isThumbnail(src)) {
+                images.add(src);
+            }
         });
+
+        // 2. Buscar en carruseles específicos
+        const carouselSelectors = [
+            '[class*="carousel"] img',
+            '[class*="slider"] img',
+            '[class*="gallery"] img',
+            '.posting-gallery img',
+            '.gallery-box img'
+        ];
+
+        carouselSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(img => {
+                const src = img.src || img.dataset.src || img.dataset.lazy;
+                if (src && !isThumbnail(src)) {
+                    images.add(src);
+                }
+            });
+        });
+
+        return Array.from(images);
     }
 
     // Función para detectar el precio
@@ -406,95 +426,35 @@
     // Función para detectar imágenes
     function detectImages() {
         console.log("Detectando imágenes...");
-        const images = new Set(); // Usar Set para evitar duplicados
-
-        // 1. Buscar imágenes en elementos img directamente
+        const images = new Set();
+        
+        // 1. Buscar todas las imágenes en la página
         document.querySelectorAll('img').forEach(img => {
-            const src = img.getAttribute('src');
+            const src = img.src || img.dataset.src || img.dataset.lazy || img.getAttribute('src');
             if (src && !isThumbnail(src)) {
-                // Buscar la versión de mayor calidad
-                const originalSrc = img.getAttribute('data-original') || 
-                                  img.getAttribute('data-lazy') ||
-                                  img.getAttribute('data-src') ||
-                                  img.getAttribute('data-full') ||
-                                  src;
-                images.add(originalSrc);
+                images.add(src);
             }
         });
 
-        // 2. Buscar en elementos de galería específicamente
-        const gallerySelectors = [
-            '[class*="gallery"]', '[class*="carousel"]', '[class*="slider"]',
-            '[class*="galeria"]', '[class*="lightbox"]', '[class*="photo"]',
-            '[id*="gallery"]', '[id*="carousel"]', '[id*="slider"]',
-            '[role="gallery"]', '[role="slider"]'
-        ].join(',');
+        // 2. Buscar en carruseles específicos
+        const carouselSelectors = [
+            '[class*="carousel"] img',
+            '[class*="slider"] img',
+            '[class*="gallery"] img',
+            '.posting-gallery img',
+            '.gallery-box img'
+        ];
 
-        document.querySelectorAll(gallerySelectors).forEach(element => {
-            // Buscar en atributos data-*
-            const dataAttributes = [
-                'data-src', 'data-lazy', 'data-original', 'data-full',
-                'data-image', 'data-zoom', 'data-large', 'data-modal',
-                'data-big', 'data-zoom-image', 'data-srcset', 'data-sizes'
-            ];
-
-            dataAttributes.forEach(attr => {
-                const value = element.getAttribute(attr);
-                if (value && !isThumbnail(value)) {
-                    images.add(value);
+        carouselSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(img => {
+                const src = img.src || img.dataset.src || img.dataset.lazy;
+                if (src && !isThumbnail(src)) {
+                    images.add(src);
                 }
             });
         });
 
-        // 3. Buscar en scripts (para galerías dinámicas)
-        document.querySelectorAll('script').forEach(script => {
-            try {
-                const content = script.textContent;
-                // Buscar URLs de imágenes en el contenido del script
-                const urlMatches = content.match(/"(https?:\/\/[^"]+\.(?:jpg|jpeg|png|gif|webp))"/gi);
-                if (urlMatches) {
-                    urlMatches.forEach(url => {
-                        const cleanUrl = url.replace(/['"]/g, '');
-                        if (!isThumbnail(cleanUrl)) {
-                            images.add(cleanUrl);
-                        }
-                    });
-                }
-            } catch (e) {
-                console.log("Error parsing script:", e);
-            }
-        });
-
-        // Función para verificar si es una miniatura
-        function isThumbnail(url) {
-            const thumbnailPatterns = [
-                /thumb/i, /small/i, /mini/i, /tiny/i, /icon/i,
-                /\b(\d{2,3}x\d{2,3})\b/, // patrones como "100x100"
-                /thumbnail/i, /preview/i, /miniatura/i,
-                /\b(50|60|70|80|90|100|120|150)\b/ // tamaños comunes de miniaturas
-            ];
-            return thumbnailPatterns.some(pattern => pattern.test(url));
-        }
-
-        // 4. Convertir URLs relativas a absolutas y filtrar
-        const processedImages = Array.from(images).map(url => {
-            try {
-                return new URL(url, window.location.href).href;
-            } catch (e) {
-                return url;
-            }
-        }).filter(url => {
-            return url.match(/\.(jpg|jpeg|png|gif|webp)/i) && 
-                   url.startsWith('http') && 
-                   !isThumbnail(url);
-        });
-
-        // 5. Eliminar duplicados y ordenar por tamaño probable
-        const uniqueImages = [...new Set(processedImages)]
-            .sort((a, b) => b.length - a.length);
-
-        console.log(`Detectadas ${uniqueImages.length} imágenes únicas de alta calidad:`, uniqueImages);
-        return uniqueImages;
+        return Array.from(images);
     }
 
     // Función para detectar información del agente inmobiliario
@@ -725,12 +685,50 @@
     }
 
     function manualImageSelection() {
-        const selectionBar = document.createElement('div');
-        selectionBar.innerHTML = `
-            <p>Haga clic en las imágenes que desea seleccionar</p>
-            <button onclick="window.finishImageSelection()">Finalizar Selección</button>
+        const images = new Set();
+        
+        // Crear barra de herramientas
+        const toolbar = document.createElement('div');
+        toolbar.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid black;
+            z-index: 10000;
         `;
-        document.body.appendChild(selectionBar);
+        toolbar.innerHTML = `
+            <p>Haga clic en las imágenes para seleccionarlas</p>
+            <button onclick="finishSelection()">Finalizar Selección</button>
+        `;
+        document.body.appendChild(toolbar);
+
+        // Hacer todas las imágenes seleccionables
+        document.querySelectorAll('img').forEach(img => {
+            img.style.cursor = 'pointer';
+            img.onclick = function() {
+                if (this.style.border === '2px solid red') {
+                    this.style.border = '';
+                    images.delete(this.src);
+                } else {
+                    this.style.border = '2px solid red';
+                    images.add(this.src);
+                }
+            };
+        });
+
+        // Función para finalizar selección
+        window.finishSelection = function() {
+            toolbar.remove();
+            const selectedImages = Array.from(images);
+            showPropertyForm(selectedImages);
+        };
+    }
+
+    function showPropertyForm(images) {
+        console.log("Imágenes seleccionadas:", images);
+        // Aquí va el código del formulario
     }
 
     // Hacer todas las funciones necesarias disponibles globalmente

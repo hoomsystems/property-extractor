@@ -3,21 +3,28 @@ import urllib.parse
 
 def generate_bookmarklet():
     return """javascript:(function(){
-        console.log('Iniciando bookmarklet');
         var script = document.createElement('script');
         script.src = 'https://hoomextractor.online/static/collector.js';
         script.onload = function() {
-            console.log('Script cargado');
-            if (typeof window.createPopup === 'undefined') {
-                console.error('createPopup no está definido');
-                alert('Error: createPopup no está definido');
-                return;
-            }
-            window.createPopup();
-        };
-        script.onerror = function(e) {
-            console.error('Error cargando script:', e);
-            alert('Error cargando script');
+            const popup = document.createElement('div');
+            popup.style.cssText = 'position:fixed;top:20px;right:20px;background:white;padding:20px;border:1px solid black;z-index:9999;';
+            popup.innerHTML = `
+                <h3>Seleccionar Imágenes</h3>
+                <button onclick="startAutomatic()">Detección Automática</button>
+                <button onclick="startManual()">Selección Manual</button>
+            `;
+            document.body.appendChild(popup);
+
+            window.startAutomatic = function() {
+                popup.remove();
+                const images = detectImages();
+                showPropertyForm(images);
+            };
+
+            window.startManual = function() {
+                popup.remove();
+                manualImageSelection();
+            };
         };
         document.body.appendChild(script);
     })();"""
