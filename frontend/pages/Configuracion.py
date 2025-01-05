@@ -53,7 +53,7 @@ def main():
     # Código del bookmarklet con codificación explícita
     bookmarklet_code = generate_bookmarklet()
     
-    # Generar el href para el bookmarklet (sin codificar)
+    # Generar el href para el bookmarklet
     bookmarklet_href = bookmarklet_code
     
     # Mostrar el código completo para copiar
@@ -74,7 +74,7 @@ def main():
         - También puedes arrastrar directamente este botón a tu barra de marcadores:
     """)
     
-    # Enlace para arrastrar (usar el código directamente)
+    # Enlace para arrastrar
     st.markdown(f'<a href="{bookmarklet_href}" class="bookmarklet">🏠 Guardar Propiedad</a>', unsafe_allow_html=True)
     
     # Instrucciones de uso
