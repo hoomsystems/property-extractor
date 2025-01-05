@@ -5,25 +5,39 @@ def generate_bookmarklet():
     return """javascript:(function(){
         var script = document.createElement('script');
         script.src = 'https://hoomextractor.online/static/collector.js';
+        
+        // Esperar a que el script se cargue completamente
         script.onload = function() {
+            // Verificar que las funciones necesarias estén disponibles
+            if (typeof window.createPopup === 'undefined') {
+                alert('Error: No se pudo cargar el script correctamente');
+                return;
+            }
+
             try {
-                // Definir funciones de selección en el scope global
+                // Definir las funciones de manejo
                 window.startManualSelection = async function() {
-                    const selectedImages = manualImageSelection();
-                    showPropertyForm(selectedImages);
+                    const selectedImages = window.manualImageSelection();
+                    window.showPropertyForm(selectedImages);
                 };
                 
                 window.startAutoSelection = async function() {
-                    const images = await detectImages();
-                    showPropertyForm(images);
+                    const images = await window.detectImages();
+                    window.showPropertyForm(images);
                 };
-                
-                // Iniciar el proceso
-                createPopup();
+
+                // Mostrar el popup inicial
+                window.createPopup();
             } catch(e) {
+                console.error('Error:', e);
                 alert('Error: ' + e.message);
             }
         };
+
+        script.onerror = function() {
+            alert('Error: No se pudo cargar el script');
+        };
+
         document.body.appendChild(script);
     })();"""
 
