@@ -2,46 +2,8 @@ import streamlit as st
 import urllib.parse
 
 def generate_bookmarklet():
-    return """javascript:(function(){
-        console.log('Iniciando bookmarklet');
-        var script = document.createElement('script');
-        script.src = 'https://hoomextractor.online/static/collector.js';
-        script.onload = function() {
-            console.log('Script cargado');
-            
-            // Definir las funciones de manejo
-            window.startAutomatic = function() {
-                const images = detectImages();
-                if (images && images.length > 0) {
-                    showPropertyForm(images);
-                } else {
-                    alert('No se encontraron imágenes');
-                }
-            };
-            
-            window.startManual = function() {
-                manualImageSelection();
-            };
-            
-            // Crear el popup inicial
-            const popup = document.createElement('div');
-            popup.style.cssText = 'position:fixed;top:20px;right:20px;background:white;padding:20px;border:1px solid black;z-index:9999;box-shadow:0 2px 5px rgba(0,0,0,0.2);';
-            popup.innerHTML = `
-                <h3>Seleccionar Imágenes</h3>
-                <button onclick="startAutomatic()">Detección Automática</button>
-                <button onclick="startManual()">Selección Manual</button>
-                <button onclick="this.parentElement.remove()">Cancelar</button>
-            `;
-            document.body.appendChild(popup);
-        };
-        
-        script.onerror = function(e) {
-            console.error('Error cargando script:', e);
-            alert('Error cargando el script');
-        };
-        
-        document.body.appendChild(script);
-    })();"""
+    # Minificar el código para evitar problemas con espacios y saltos de línea
+    return """javascript:(function(){console.log('Iniciando bookmarklet');var script=document.createElement('script');script.src='https://hoomextractor.online/static/collector.js';script.onload=function(){console.log('Script cargado');window.startAutomatic=function(){const images=detectImages();if(images&&images.length>0){showPropertyForm(images);}else{alert('No se encontraron imágenes');}};window.startManual=function(){manualImageSelection();};const popup=document.createElement('div');popup.style.cssText='position:fixed;top:20px;right:20px;background:white;padding:20px;border:1px solid black;z-index:9999;box-shadow:0 2px 5px rgba(0,0,0,0.2);';popup.innerHTML='<h3>Seleccionar Imágenes</h3><button onclick="startAutomatic()">Detección Automática</button><button onclick="startManual()">Selección Manual</button><button onclick="this.parentElement.remove()">Cancelar</button>';document.body.appendChild(popup);};script.onerror=function(e){console.error('Error cargando script:',e);alert('Error cargando el script');};document.body.appendChild(script);})();"""
 
 def main():
     # Forzar UTF-8 en la página
@@ -64,8 +26,8 @@ def main():
     # Código del bookmarklet con codificación explícita
     bookmarklet_code = generate_bookmarklet()
     
-    # Generar el href para el bookmarklet
-    bookmarklet_href = f"javascript:{urllib.parse.quote(bookmarklet_code)}"
+    # Generar el href para el bookmarklet (sin codificar de más)
+    bookmarklet_href = generate_bookmarklet()
     
     # Mostrar el código completo para copiar
     st.code(bookmarklet_code, language="javascript")
@@ -85,7 +47,7 @@ def main():
         - También puedes arrastrar directamente este botón a tu barra de marcadores:
     """)
     
-    # Enlace para arrastrar
+    # Enlace para arrastrar (usar el código directamente)
     st.markdown(f'<a href="{bookmarklet_href}" class="bookmarklet">🏠 Guardar Propiedad</a>', unsafe_allow_html=True)
     
     # Instrucciones de uso
