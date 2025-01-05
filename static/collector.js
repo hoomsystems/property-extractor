@@ -684,49 +684,15 @@
     }
 
     async function createPopup() {
-        try {
-            console.log("🏁 Iniciando createPopup");
-            
-            // Verificar URL
-            const currentURL = window.location.href;
-            
-            // Crear popup con opción manual
-            const popup = document.createElement('div');
-            popup.style.position = 'fixed';
-            popup.style.top = '20px';
-            popup.style.right = '20px';
-            popup.style.backgroundColor = 'white';
-            popup.style.padding = '20px';
-            popup.style.border = '1px solid black';
-            popup.style.zIndex = '9999';
-            popup.innerHTML = `
-                <h3>Selección de Imágenes</h3>
-                <p>Elija el método de selección:</p>
-                <button onclick="startManualSelection()">Selección Manual</button>
-                <button onclick="startAutoSelection()">Detección Automática</button>
-                <button onclick="this.parentElement.remove()">Cancelar</button>
-            `;
-            document.body.appendChild(popup);
-            
-            // Hacer las funciones disponibles
-            window.startManualSelection = async function() {
-                popup.remove();
-                alert('Haga clic en las imágenes que desea seleccionar. Las imágenes seleccionadas tendrán un borde rojo.');
-                const selectedImages = manualImageSelection();
-                // Continuar con el proceso normal usando las imágenes seleccionadas
-                showPropertyForm(selectedImages);
-            };
-            
-            window.startAutoSelection = async function() {
-                popup.remove();
-                const images = await detectImages();
-                showPropertyForm(images);
-            };
-            
-        } catch (error) {
-            console.error("❌ Error en createPopup:", error);
-            alert('Error: ' + error.message);
-        }
+        const popup = document.createElement('div');
+        popup.innerHTML = `
+            <h3>Selección de Imágenes</h3>
+            <p>Elija el método de selección:</p>
+            <button onclick="startManualSelection()">Selección Manual</button>
+            <button onclick="startAutoSelection()">Detección Automática</button>
+            <button onclick="this.parentElement.remove()">Cancelar</button>
+        `;
+        document.body.appendChild(popup);
     }
 
     function debugLog(message, data = null) {
@@ -748,41 +714,12 @@
     }
 
     function manualImageSelection() {
-        const images = new Set();
         const selectionBar = document.createElement('div');
-        selectionBar.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 10px;
-            border: 1px solid black;
-            z-index: 10000;
-        `;
         selectionBar.innerHTML = `
             <p>Haga clic en las imágenes que desea seleccionar</p>
             <button onclick="window.finishImageSelection()">Finalizar Selección</button>
         `;
         document.body.appendChild(selectionBar);
-
-        document.querySelectorAll('img').forEach(img => {
-            img.style.cursor = 'pointer';
-            img.onclick = function() {
-                if (this.style.border === '2px solid red') {
-                    this.style.border = '';
-                    images.delete(this.src);
-                } else {
-                    this.style.border = '2px solid red';
-                    images.add(this.src);
-                }
-            }
-        });
-
-        window.finishImageSelection = function() {
-            selectionBar.remove();
-            const selectedImages = Array.from(images);
-            showPropertyForm(selectedImages);
-        }
     }
 
     // Hacer las funciones disponibles globalmente
