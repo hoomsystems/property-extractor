@@ -4,6 +4,13 @@
     // Actualizar todas las URLs del backend
     const BACKEND_URL = 'https://hoomextractor.online/api';
 
+    // Declarar las funciones que necesitamos exponer globalmente
+    window.detectImages = null;
+    window.manualImageSelection = null;
+    window.showPropertyForm = null;
+    window.startAutomatic = null;
+    window.startManual = null;
+
     const siteDetectors = {
         // Detector para Inmuebles24
         'inmuebles24.com': {
@@ -880,6 +887,7 @@
     window.detectImages = detectImages;
     window.showPropertyForm = showPropertyForm;
     window.startAutomatic = function() {
+        console.log("Iniciando detección automática");
         const images = detectImages();
         if (images && images.length > 0) {
             showPropertyForm(images);
@@ -888,8 +896,15 @@
         }
     };
     window.startManual = function() {
+        console.log("Iniciando selección manual");
         manualImageSelection();
     };
 
-    console.log("Collector.js cargado completamente");
+    console.log("Collector.js cargado completamente. Funciones disponibles:", {
+        detectImages: !!window.detectImages,
+        manualImageSelection: !!window.manualImageSelection,
+        showPropertyForm: !!window.showPropertyForm,
+        startAutomatic: !!window.startAutomatic,
+        startManual: !!window.startManual
+    });
 })(); 
