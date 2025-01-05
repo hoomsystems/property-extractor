@@ -2,7 +2,8 @@ import streamlit as st
 import urllib.parse
 
 def generate_bookmarklet():
-    return """javascript:(function(){
+    # Primero definimos el código JavaScript
+    js_code = """(function(){
         // Crear el formulario principal
         var d = document.createElement('div');
         d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border:1px solid #ccc;border-radius:8px;z-index:9999;box-shadow:0 2px 10px rgba(0,0,0,0.2);font-family:Arial,sans-serif;width:600px;max-height:90vh;overflow-y:auto';
@@ -31,7 +32,6 @@ def generate_bookmarklet():
                         updateImagePreview();
                     };
                     
-                    // Agregar hover effect
                     img.addEventListener('mouseover', function() {
                         if (this.style.border !== '2px solid red') {
                             this.style.boxShadow = '0 0 5px rgba(0,0,0,0.3)';
@@ -60,7 +60,7 @@ def generate_bookmarklet():
             <h3 style="margin:0 0 15px">Guardar Propiedad</h3>
             <form id="propertyForm" style="display:flex;flex-direction:column;gap:15px">
                 <div>
-                    <label>URL de la propiedad:</label>
+                    <label>URL:</label>
                     <input type="text" name="url" value="${window.location.href}" readonly style="width:100%;padding:5px">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -89,7 +89,7 @@ def generate_bookmarklet():
                 </div>
                 <div>
                     <label>Descripción:</label>
-                    <textarea name="description" required style="width:100%;height:100px;padding:5px"></textarea>
+                    <textarea name="description" required style="width:100%;height:80px;padding:5px"></textarea>
                 </div>
                 <div>
                     <label>Datos del vendedor:</label>
@@ -102,9 +102,9 @@ def generate_bookmarklet():
                 <div>
                     <label>Imágenes: <span id="selectedCount">0</span> seleccionadas</label>
                     <button type="button" onclick="window.enableImageSelection()" style="width:100%;padding:10px;margin:5px 0;background:#2196F3;color:white;border:none;border-radius:4px;cursor:pointer">
-                        Seleccionar imágenes de la página
+                        Seleccionar imágenes
                     </button>
-                    <div id="imagePreview" style="max-height:100px;overflow-y:auto;padding:5px;border:1px solid #ccc;margin:5px 0;display:flex;flex-wrap:wrap;gap:5px;"></div>
+                    <div id="imagePreview" style="max-height:100px;overflow-y:auto;padding:5px;border:1px solid #ccc;margin:5px 0;display:flex;flex-wrap:wrap;gap:5px"></div>
                 </div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
                     <button type="submit" style="padding:10px 20px;background:#4CAF50;color:white;border:none;border-radius:4px;cursor:pointer">Guardar</button>
@@ -153,6 +153,12 @@ def generate_bookmarklet():
             }
         };
     })();"""
+
+    # Minificar el código y asegurarnos que esté bien formado
+    minified = js_code.strip().replace('\n', ' ').replace('    ', '')
+    
+    # Retornar el bookmarklet con el prefijo javascript:
+    return f"javascript:{minified}"
 
 def main():
     # Forzar UTF-8 en la página
