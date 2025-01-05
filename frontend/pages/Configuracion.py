@@ -2,79 +2,27 @@ import streamlit as st
 import urllib.parse
 
 def generate_bookmarklet():
+    # Minificar el código para evitar problemas
     return """javascript:(function(){
-        console.log('Iniciando bookmarklet');
-        var script = document.createElement('script');
-        script.src = 'https://hoomextractor.online/static/collector.js';
-        script.onload = function() {
-            console.log('Script cargado');
-            
-            // Verificar que las funciones necesarias estén disponibles
-            if (!window.manualImageSelection || !window.showPropertyForm) {
-                console.error('Funciones necesarias no encontradas');
-                alert('Error: No se pudieron cargar las funciones necesarias');
+        var s=document.createElement('script');
+        s.src='https://hoomextractor.online/static/collector.js';
+        s.onload=function(){
+            if(!window.manualImageSelection){
+                alert('Error: No se pudo cargar el script correctamente');
                 return;
             }
-            
-            const popup = document.createElement('div');
-            popup.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: white;
-                padding: 20px;
-                border: 1px solid #ccc;
-                border-radius: 8px;
-                z-index: 9999;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                font-family: Arial, sans-serif;
-            `;
-            
-            const buttonStyle = `
-                display: block;
-                width: 100%;
-                margin: 8px 0;
-                padding: 10px;
-                border: none;
-                border-radius: 4px;
-                font-size: 14px;
-                cursor: pointer;
-                transition: background-color 0.2s;
-            `;
-            
-            popup.innerHTML = `
-                <h3 style="margin: 0 0 15px 0; font-size: 16px;">Seleccionar Imágenes</h3>
-                <button onclick="window.startAutomatic()" style="${buttonStyle} background-color: #4CAF50; color: white;">Detección Automática</button>
-                <button onclick="window.startManual()" style="${buttonStyle} background-color: #2196F3; color: white;">Selección Manual</button>
-                <button onclick="this.parentElement.remove()" style="${buttonStyle} background-color: #f44336; color: white;">Cancelar</button>
-            `;
-            
-            document.body.appendChild(popup);
-            
-            window.startAutomatic = function() {
-                popup.remove();
-                console.log('Iniciando detección automática');
-                const images = window.detectImages();
-                if (images && images.length > 0) {
-                    window.showPropertyForm(images);
-                } else {
-                    alert('No se encontraron imágenes');
-                }
-            };
-            
-            window.startManual = function() {
-                popup.remove();
-                console.log('Iniciando selección manual');
-                window.manualImageSelection();
-            };
+            var d=document.createElement('div');
+            d.style.cssText='position:fixed;top:20px;right:20px;background:white;padding:20px;border:1px solid #ccc;border-radius:8px;z-index:9999;box-shadow:0 2px 10px rgba(0,0,0,0.2);font-family:Arial,sans-serif';
+            var b='display:block;width:100%;margin:8px 0;padding:10px;border:none;border-radius:4px;font-size:14px;cursor:pointer;color:white';
+            d.innerHTML='<h3 style="margin:0 0 15px 0;font-size:16px">Seleccionar Imágenes</h3>'+
+                '<button onclick="window.startAutomatic()" style="'+b+';background:#4CAF50">Detección Automática</button>'+
+                '<button onclick="window.startManual()" style="'+b+';background:#2196F3">Selección Manual</button>'+
+                '<button onclick="this.parentElement.remove()" style="'+b+';background:#f44336">Cancelar</button>';
+            document.body.appendChild(d);
+            window.startAutomatic=function(){d.remove();var i=window.detectImages();i&&i.length?window.showPropertyForm(i):alert('No se encontraron imágenes')};
+            window.startManual=function(){d.remove();window.manualImageSelection()};
         };
-        
-        script.onerror = function(e) {
-            console.error('Error cargando script:', e);
-            alert('Error cargando el script');
-        };
-        
-        document.body.appendChild(script);
+        document.body.appendChild(s);
     })();"""
 
 def main():
@@ -98,8 +46,8 @@ def main():
     # Código del bookmarklet con codificación explícita
     bookmarklet_code = generate_bookmarklet()
     
-    # Generar el href para el bookmarklet (sin codificar de más)
-    bookmarklet_href = generate_bookmarklet()
+    # Generar el href para el bookmarklet (sin codificar)
+    bookmarklet_href = bookmarklet_code
     
     # Mostrar el código completo para copiar
     st.code(bookmarklet_code, language="javascript")

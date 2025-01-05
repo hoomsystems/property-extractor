@@ -879,6 +879,17 @@
     window.manualImageSelection = manualImageSelection;
     window.detectImages = detectImages;
     window.showPropertyForm = showPropertyForm;
+    window.startAutomatic = function() {
+        const images = detectImages();
+        if (images && images.length > 0) {
+            showPropertyForm(images);
+        } else {
+            alert('No se encontraron imágenes');
+        }
+    };
+    window.startManual = function() {
+        manualImageSelection();
+    };
 
     console.log("Collector.js cargado completamente");
 })(); 
