@@ -4,6 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import re
+import os
+from datetime import datetime
 
 class PropertyScraper:
     def __init__(self):
@@ -11,19 +13,32 @@ class PropertyScraper:
         self.options.add_argument('--headless')
         self.options.add_argument('--no-sandbox')
         self.options.add_argument('--disable-dev-shm-usage')
+        
+        # Crear directorio para debug si no existe
+        self.debug_dir = '/var/www/proyectos/hoomextractor/debug'
+        os.makedirs(self.debug_dir, exist_ok=True)
 
     def scrape(self, url):
         driver = uc.Chrome(options=self.options)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
         try:
             print(f"Iniciando scraping de: {url}")
             driver.get(url)
             
             # Esperar más tiempo y verificar que la página cargó
-            time.sleep(20)  # Aumentar tiempo de espera
+            time.sleep(20)
             
             # Guardar el HTML para debug
-            with open('debug_page.html', 'w', encoding='utf-8') as f:
+            debug_html = os.path.join(self.debug_dir, f'debug_page_{timestamp}.html')
+            with open(debug_html, 'w', encoding='utf-8') as f:
                 f.write(driver.page_source)
+            print(f"HTML guardado en: {debug_html}")
+            
+            # Guardar screenshot inicial
+            screenshot_path = os.path.join(self.debug_dir, f'page_{timestamp}.png')
+            driver.save_screenshot(screenshot_path)
+            print(f"Screenshot guardado en: {screenshot_path}")
             
             print("Página cargada, verificando contenido...")
             page_text = driver.page_source.lower()
@@ -94,11 +109,13 @@ class PropertyScraper:
             
         except Exception as e:
             print(f"Error durante el scraping: {str(e)}")
-            # Guardar screenshot para debug
+            # Guardar screenshot de error
+            error_screenshot = os.path.join(self.debug_dir, f'error_{timestamp}.png')
             try:
-                driver.save_screenshot('error_screenshot.png')
+                driver.save_screenshot(error_screenshot)
+                print(f"Screenshot de error guardado en: {error_screenshot}")
             except:
-                pass
+                print("No se pudo guardar el screenshot de error")
             raise
         finally:
             driver.quit()
