@@ -1,16 +1,14 @@
 from fastapi import APIRouter, HTTPException
-from .scraper import PropertyScraper
+from .crew_scraper import PropertyCrewScraper
+import os
 
 router = APIRouter()
-scraper = PropertyScraper()
+scraper = PropertyCrewScraper(api_key=os.getenv('OPENAI_API_KEY'))
 
-@router.get("/scrape")
+@router.get("/api/scrape")
 async def scrape_property(url: str):
     try:
-        data = scraper.scrape(url)
-        return {
-            "status": "success",
-            "data": data
-        }
+        result = scraper.scrape(url)
+        return {"status": "success", "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
