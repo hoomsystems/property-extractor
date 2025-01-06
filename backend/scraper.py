@@ -1,40 +1,105 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+import re
 
 class PropertyScraper:
     def __init__(self):
-        self.options = Options()
+        self.options = uc.ChromeOptions()
         self.options.add_argument('--headless')
-        self.options.add_argument('--disable-gpu')
         self.options.add_argument('--no-sandbox')
         self.options.add_argument('--disable-dev-shm-usage')
-        self.options.add_argument('--window-size=1920,1080')
-        # Importante: usar un User-Agent realista
-        self.options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
     def scrape(self, url):
-        driver = webdriver.Chrome(options=self.options)
+        driver = uc.Chrome(options=self.options)
         try:
+            print(f"Iniciando scraping de: {url}")
             driver.get(url)
-            # Esperar a que la página cargue completamente
-            time.sleep(5)  # Esperar que pase la protección de Cloudflare
             
-            # Extraer datos
+            # Esperar más tiempo y verificar que la página cargó
+            time.sleep(20)  # Aumentar tiempo de espera
+            
+            # Guardar el HTML para debug
+            with open('debug_page.html', 'w', encoding='utf-8') as f:
+                f.write(driver.page_source)
+            
+            print("Página cargada, verificando contenido...")
+            page_text = driver.page_source.lower()
+            
+            # Verificar si estamos en la página correcta
+            if "cloudflare" in page_text:
+                print("Detectada protección de Cloudflare, esperando...")
+                time.sleep(15)
+            elif "robot" in page_text or "captcha" in page_text:
+                print("Detectada página de verificación, esperando...")
+                time.sleep(15)
+            
+            print("Extrayendo datos...")
+            
+            # Intentar extraer datos con diferentes métodos
             data = {
                 'url': url,
-                'title': self._get_title(driver),
-                'price': self._get_price(driver),
-                'location': self._get_location(driver),
-                'description': self._get_description(driver),
-                'features': self._get_features(driver),
-                'images': self._get_images(driver)
+                'html_length': len(driver.page_source),
+                'page_title': driver.title,
+                'data_found': {}
             }
             
+            # Extraer datos con manejo de errores individual
+            try:
+                data['title'] = self._get_title(driver)
+                data['data_found']['title'] = True
+            except Exception as e:
+                print(f"Error al extraer título: {str(e)}")
+                data['data_found']['title'] = False
+            
+            try:
+                data['price'] = self._get_price(driver)
+                data['data_found']['price'] = True
+            except Exception as e:
+                print(f"Error al extraer precio: {str(e)}")
+                data['data_found']['price'] = False
+            
+            try:
+                data['location'] = self._get_location(driver)
+                data['data_found']['location'] = True
+            except Exception as e:
+                print(f"Error al extraer ubicación: {str(e)}")
+                data['data_found']['location'] = False
+            
+            try:
+                data['description'] = self._get_description(driver)
+                data['data_found']['description'] = True
+            except Exception as e:
+                print(f"Error al extraer descripción: {str(e)}")
+                data['data_found']['description'] = False
+            
+            try:
+                data['features'] = self._get_features(driver)
+                data['data_found']['features'] = True
+            except Exception as e:
+                print(f"Error al extraer características: {str(e)}")
+                data['data_found']['features'] = False
+            
+            try:
+                data['images'] = self._get_images(driver)
+                data['data_found']['images'] = True
+            except Exception as e:
+                print(f"Error al extraer imágenes: {str(e)}")
+                data['data_found']['images'] = False
+            
+            print("Datos extraídos:", data)
             return data
+            
+        except Exception as e:
+            print(f"Error durante el scraping: {str(e)}")
+            # Guardar screenshot para debug
+            try:
+                driver.save_screenshot('error_screenshot.png')
+            except:
+                pass
+            raise
         finally:
             driver.quit()
 
@@ -127,29 +192,73 @@ class PropertyScraper:
         return features
 
     def _get_location(self, driver):
-        location_selectors = [
-            '[class*="location"]',
-            '[class*="address"]',
-            '[class*="ubicacion"]',
-            '[itemprop="address"]'
-        ]
-        
-        for selector in location_selectors:
-            element = driver.find_element(By.CSS_SELECTOR, selector)
-            if element:
-                return element.text.strip()
-        return ''
+        try:
+            # Lista de selectores para ubicación
+            location_selectors = [
+                '[class*="location"]',
+                '[class*="address"]',
+                '[class*="ubicacion"]',
+                '[itemprop="address"]',
+                '[class*="Location"]',
+                '[class*="Address"]',
+                # Selectores específicos de inmuebles24
+                '[data-qa="POSTING_CARD_LOCATION"]',
+                '.posting-location',
+                '.location-container'
+            ]
+            
+            # Intentar cada selector
+            for selector in location_selectors:
+                try:
+                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    if elements:
+                        return elements[0].text.strip()
+                except:
+                    continue
+            
+            # Si no encontramos nada, intentar buscar en todo el HTML
+            html = driver.page_source.lower()
+            location_patterns = [
+                r'ubicado en[:\s]+([^\.]+)',
+                r'ubicación[:\s]+([^\.]+)',
+                r'dirección[:\s]+([^\.]+)',
+                r'colonia[:\s]+([^\.]+)'
+            ]
+            
+            for pattern in location_patterns:
+                match = re.search(pattern, html)
+                if match:
+                    return match.group(1).strip()
+                
+            return "Ubicación no encontrada"
+        except Exception as e:
+            print(f"Error al obtener ubicación: {str(e)}")
+            return "Error al obtener ubicación"
 
     def _get_description(self, driver):
-        description_selectors = [
-            '[class*="description"]',
-            '[class*="descripcion"]',
-            '[itemprop="description"]',
-            '[class*="detail"]'
-        ]
-        
-        for selector in description_selectors:
-            element = driver.find_element(By.CSS_SELECTOR, selector)
-            if element:
-                return element.text.strip()
-        return '' 
+        try:
+            # Lista de selectores para descripción
+            description_selectors = [
+                '[class*="description"]',
+                '[class*="descripcion"]',
+                '[itemprop="description"]',
+                '[class*="detail"]',
+                # Selectores específicos de inmuebles24
+                '[data-qa="POSTING_DESCRIPTION"]',
+                '.posting-description',
+                '#description-container'
+            ]
+            
+            # Intentar cada selector
+            for selector in description_selectors:
+                try:
+                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    if elements:
+                        return elements[0].text.strip()
+                except:
+                    continue
+            
+            return "Descripción no encontrada"
+        except Exception as e:
+            print(f"Error al obtener descripción: {str(e)}")
+            return "Error al obtener descripción" 
