@@ -1,17 +1,11 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from .routes import router  # Importar el router
+from dotenv import load_dotenv
+import os
+
+# Cargar variables de entorno
+load_dotenv()
+
+from .routes import router
 
 app = FastAPI()
-
-# Configurar CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Permitir todos los orígenes
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-) 
-
-# Incluir el router
-app.include_router(router, prefix="/api") 
+app.include_router(router) 
