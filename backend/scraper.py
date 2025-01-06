@@ -6,6 +6,7 @@ import time
 import re
 import os
 from datetime import datetime
+import random
 
 class PropertyScraper:
     def __init__(self):
@@ -15,26 +16,57 @@ class PropertyScraper:
     def scrape(self, url):
         # Crear nuevas opciones para cada instancia
         options = uc.ChromeOptions()
-        options.add_argument('--headless')
+        
+        # Configuración más agresiva para evadir detección
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument("--disable-javascript")  # Deshabilitar JS temporalmente
+        options.add_argument('--incognito')
+        options.add_argument('--disable-cache')
+        options.add_argument('--disable-application-cache')
+        options.add_argument('--disable-offline-load-stale-cache')
+        options.add_argument('--disk-cache-size=0')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--dns-prefetch-disable')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         
-        # Añadir opciones para evadir detección
-        options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_argument('--disable-extensions')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--window-size=1920,1080')
-        
-        # Añadir user agent realista
-        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        # Rotación de User Agents
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+        ]
+        options.add_argument(f'--user-agent={random.choice(user_agents)}')
         
         driver = uc.Chrome(options=options)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
         try:
             print(f"Iniciando scraping de: {url}")
-            driver.get(url)
             
+            # Limpiar cookies y almacenamiento
+            driver.execute_cdp_cmd('Network.clearBrowserCookies', {})
+            driver.execute_cdp_cmd('Network.clearBrowserCache', {})
+            
+            # Intentar acceder a la página con reintento
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    driver.get(url)
+                    time.sleep(10 + (attempt * 5))  # Incrementar tiempo de espera en cada intento
+                    
+                    if "cloudflare" not in driver.page_source.lower():
+                        break
+                        
+                    print(f"Intento {attempt + 1}: Detectado Cloudflare, reintentando...")
+                    driver.delete_all_cookies()
+                    driver.refresh()
+                    
+                except Exception as e:
+                    print(f"Error en intento {attempt + 1}: {str(e)}")
+                    if attempt == max_retries - 1:
+                        raise
+                        
             # Esperar más tiempo y verificar que la página cargó
             time.sleep(20)
             
