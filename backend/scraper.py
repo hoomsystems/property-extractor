@@ -210,44 +210,65 @@ class PropertyScraper:
 
     def _get_location(self, driver):
         try:
-            # Lista de selectores para ubicación
-            location_selectors = [
-                '[class*="location"]',
-                '[class*="address"]',
-                '[class*="ubicacion"]',
-                '[itemprop="address"]',
-                '[class*="Location"]',
-                '[class*="Address"]',
-                # Selectores específicos de inmuebles24
-                '[data-qa="POSTING_CARD_LOCATION"]',
-                '.posting-location',
-                '.location-container'
+            print("Intentando obtener ubicación...")
+            
+            # Esperar a que la página cargue completamente
+            time.sleep(5)
+            
+            # Intentar diferentes estrategias de XPath
+            location_xpaths = [
+                # Buscar por texto en etiquetas
+                "//*[contains(text(), 'Ubicado en') or contains(text(), 'Ubicación')]/following-sibling::*",
+                "//*[contains(text(), 'Dirección') or contains(text(), 'Colonia')]/following-sibling::*",
+                
+                # Buscar por atributos comunes
+                "//*[@data-qa='POSTING_CARD_LOCATION']",
+                "//*[contains(@class, 'location') or contains(@class, 'ubicacion')]",
+                "//*[contains(@class, 'address') or contains(@class, 'direccion')]",
+                
+                # Buscar por estructura común de inmuebles24
+                "//div[contains(@class, 'posting-location')]",
+                "//div[contains(@class, 'location-container')]",
+                
+                # Buscar por metadatos
+                "//*[@itemprop='address']",
+                "//*[@property='og:street-address']"
             ]
             
-            # Intentar cada selector
-            for selector in location_selectors:
+            # Intentar cada XPath
+            for xpath in location_xpaths:
                 try:
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    print(f"Probando XPath: {xpath}")
+                    elements = driver.find_elements(By.XPATH, xpath)
                     if elements:
-                        return elements[0].text.strip()
-                except:
+                        location = elements[0].text.strip()
+                        print(f"Ubicación encontrada: {location}")
+                        return location
+                except Exception as e:
+                    print(f"Error con XPath {xpath}: {str(e)}")
                     continue
             
-            # Si no encontramos nada, intentar buscar en todo el HTML
+            # Si no encontramos nada con XPath, intentar buscar en el HTML
+            print("Intentando búsqueda en HTML completo...")
             html = driver.page_source.lower()
             location_patterns = [
                 r'ubicado en[:\s]+([^\.]+)',
                 r'ubicación[:\s]+([^\.]+)',
                 r'dirección[:\s]+([^\.]+)',
-                r'colonia[:\s]+([^\.]+)'
+                r'colonia[:\s]+([^\.]+)',
+                r'(?:calle|avenida|av\.|blvd\.)[:\s]+([^\.]+)'
             ]
             
             for pattern in location_patterns:
                 match = re.search(pattern, html)
                 if match:
-                    return match.group(1).strip()
-                
+                    location = match.group(1).strip()
+                    print(f"Ubicación encontrada por patrón: {location}")
+                    return location
+            
+            print("No se encontró ubicación")
             return "Ubicación no encontrada"
+            
         except Exception as e:
             print(f"Error al obtener ubicación: {str(e)}")
             return "Error al obtener ubicación"
