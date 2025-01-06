@@ -213,7 +213,27 @@ class PropertyScraper:
             print("Intentando obtener ubicación...")
             
             # Esperar a que la página cargue completamente
-            time.sleep(5)
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            )
+            
+            # Imprimir el título y URL actual para debug
+            print(f"Título de la página: {driver.title}")
+            print(f"URL actual: {driver.current_url}")
+            
+            # Guardar el HTML actual para debug
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            debug_html = os.path.join(self.debug_dir, f'location_debug_{timestamp}.html')
+            with open(debug_html, 'w', encoding='utf-8') as f:
+                f.write(driver.page_source)
+            print(f"HTML guardado en: {debug_html}")
+            
+            # Tomar screenshot específico para debug de ubicación
+            location_screenshot = os.path.join(self.debug_dir, f'location_{timestamp}.png')
+            driver.save_screenshot(location_screenshot)
+            print(f"Screenshot guardado en: {location_screenshot}")
+            
+            # Resto del código igual...
             
             # Intentar diferentes estrategias de XPath
             location_xpaths = [
