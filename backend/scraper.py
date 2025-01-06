@@ -14,7 +14,16 @@ class PropertyScraper:
         self.options.add_argument('--no-sandbox')
         self.options.add_argument('--disable-dev-shm-usage')
         
-        # Crear directorio para debug si no existe
+        # Añadir opciones para evadir detección
+        self.options.add_argument('--disable-blink-features=AutomationControlled')
+        self.options.add_argument('--disable-extensions')
+        self.options.add_argument('--disable-gpu')
+        self.options.add_argument('--window-size=1920,1080')
+        
+        # Añadir user agent realista
+        self.options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+        
+        # Crear directorio para debug
         self.debug_dir = '/var/www/proyectos/hoomextractor/debug'
         os.makedirs(self.debug_dir, exist_ok=True)
 
@@ -28,6 +37,22 @@ class PropertyScraper:
             
             # Esperar más tiempo y verificar que la página cargó
             time.sleep(20)
+            
+            # Verificar si estamos en Cloudflare
+            if "cloudflare" in driver.page_source.lower() or "attention required" in driver.title.lower():
+                print("Detectada protección de Cloudflare, esperando y reintentando...")
+                time.sleep(30)  # Esperar más tiempo
+                
+                # Refrescar la página
+                driver.refresh()
+                time.sleep(10)
+                
+                # Si aún estamos en Cloudflare, intentar una última vez
+                if "cloudflare" in driver.page_source.lower():
+                    print("Aún en Cloudflare, último intento...")
+                    driver.delete_all_cookies()
+                    driver.get(url)
+                    time.sleep(20)
             
             # Guardar el HTML para debug
             debug_html = os.path.join(self.debug_dir, f'debug_page_{timestamp}.html')
